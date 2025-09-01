@@ -1,0 +1,157 @@
+import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { NavLink } from 'react-router-dom'
+import LanguageSwitcher from '../LanguageSwitcher'
+import {
+  HomeIcon,
+  WrenchScrewdriverIcon,
+  UsersIcon,
+  UserGroupIcon,
+  EnvelopeIcon,
+  CreditCardIcon,
+  ChartBarIcon,
+  BellIcon,
+  UserCircleIcon,
+  Bars3Icon,
+  XMarkIcon
+} from '@heroicons/react/24/outline'
+
+interface HeaderProps {
+  user?: {
+    name: string
+    email: string
+    userType: string
+  }
+}
+
+const Header: React.FC<HeaderProps> = ({ user }) => {
+  const { t } = useTranslation()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const navigationItems = [
+    { name: t('mainDashboard'), href: '/', icon: HomeIcon },
+    { name: t('maintenance'), href: '/maintenance', icon: WrenchScrewdriverIcon },
+    { name: t('community'), href: '/community', icon: UserGroupIcon },
+    { name: t('tenants'), href: '/tenants', icon: UsersIcon },
+    { name: t('invitations'), href: '/invitations', icon: EnvelopeIcon },
+    { name: t('payments'), href: '/payments', icon: CreditCardIcon },
+    { name: t('analytics'), href: '/analytics', icon: ChartBarIcon },
+  ]
+
+  return (
+    <header className="bg-white shadow-sm border-b border-gray-200">
+      {/* Top bar with logo and user info */}
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-blue-600">
+        <div className="flex items-center">
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">
+            <div className="w-6 h-6 bg-blue-600 rounded grid grid-cols-2 gap-0.5">
+              <div className="bg-white rounded-sm"></div>
+              <div className="bg-white rounded-sm"></div>
+              <div className="bg-white rounded-sm"></div>
+              <div className="bg-white rounded-sm"></div>
+            </div>
+          </div>
+          <span className="text-white font-bold text-lg hidden sm:block">BA Property Manager</span>
+          <span className="text-white font-bold text-base sm:hidden">BA Property</span>
+        </div>
+
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          <LanguageSwitcher />
+          
+          <button className="relative p-2 text-white hover:text-blue-100 transition-colors">
+            <BellIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="absolute top-0 right-0 w-2 h-2 bg-red-400 rounded-full"></span>
+          </button>
+
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 text-white hover:text-blue-100 transition-colors sm:hidden"
+          >
+            {mobileMenuOpen ? (
+              <XMarkIcon className="w-6 h-6" />
+            ) : (
+              <Bars3Icon className="w-6 h-6" />
+            )}
+          </button>
+
+          <div className="hidden sm:flex items-center space-x-3">
+            <div className="text-right">
+              <p className="text-sm font-medium text-white">
+                {user?.name || t('adminUser')}
+              </p>
+              <p className="text-xs text-blue-100">
+                {t('administrator')}
+              </p>
+            </div>
+            <UserCircleIcon className="w-8 h-8 text-white" />
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation bar - Desktop */}
+      <nav className="hidden sm:block px-6 py-2 bg-white">
+        <div className="flex items-center space-x-1">
+          {navigationItems.map((item) => (
+            <NavLink
+              key={item.name}
+              to={item.href}
+              className={({ isActive }) =>
+                `flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-blue-100 text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`
+              }
+            >
+              <item.icon className="w-4 h-4 mr-2" />
+              {item.name}
+            </NavLink>
+          ))}
+        </div>
+      </nav>
+
+      {/* Mobile navigation menu */}
+      {mobileMenuOpen && (
+        <nav className="sm:hidden bg-white border-t border-gray-200">
+          <div className="px-4 py-2 space-y-1">
+            {navigationItems.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-blue-100 text-blue-600 border-l-4 border-blue-600'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`
+                }
+              >
+                <item.icon className="w-5 h-5 mr-3" />
+                {item.name}
+              </NavLink>
+            ))}
+          </div>
+          
+          {/* Mobile user info */}
+          <div className="px-4 py-3 border-t border-gray-200">
+            <div className="flex items-center space-x-3">
+              <UserCircleIcon className="w-8 h-8 text-gray-400" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">
+                  {user?.name || t('adminUser')}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {t('administrator')}
+                </p>
+              </div>
+            </div>
+          </div>
+        </nav>
+      )}
+    </header>
+  )
+}
+
+export default Header
