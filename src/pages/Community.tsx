@@ -9,8 +9,7 @@ import {
   GlobeAltIcon,
   ChatBubbleLeftRightIcon,
   CalendarDaysIcon,
-  BellIcon,
-  PaperClipIcon
+  BellIcon
 } from '@heroicons/react/24/outline'
 
 const Community: React.FC = () => {

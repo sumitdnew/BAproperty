@@ -1,7 +1,7 @@
 // index.ts - Export all custom hooks
 
-export { default as useAuth } from './useAuth'
-export { default as useDashboardStats } from './useDashboardStats'
-export { default as useMaintenanceRequests } from './useMaintenanceRequests'
-export { default as usePayments } from './usePayments'
-export { default as useTenants } from './useTenants'
+export { useAuth } from './useAuth'
+export { useDashboardStats } from './useDashboardStats'
+export { useMaintenanceRequests } from './useMaintenanceRequests'
+export { usePayments } from './usePayments'
+export { useTenants } from './useTenants'

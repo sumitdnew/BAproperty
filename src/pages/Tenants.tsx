@@ -2,7 +2,6 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { 
-  PlusIcon, 
   EnvelopeIcon,
   UserPlusIcon,
   MagnifyingGlassIcon,

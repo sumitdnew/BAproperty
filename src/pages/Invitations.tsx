@@ -2,7 +2,6 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { 
-  PlusIcon,
   EnvelopeIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -11,13 +10,11 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   PaperAirplaneIcon,
-  HomeIcon,
-  PhoneIcon
+  HomeIcon
 } from '@heroicons/react/24/outline'
 
 const Invitations: React.FC = () => {
   const { t } = useTranslation()
-  const [activeTab, setActiveTab] = useState('sent')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -305,7 +302,7 @@ const Invitations: React.FC = () => {
                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(invitation.status)}`}>
                       {t(invitation.status)}
                     </span>
-                    {invitation.status === 'pending' && (
+                    {invitation.status === 'pending' && invitation.expiresAt && (
                       <div className="text-xs text-gray-500 mt-1">
                         {t('expires')}: {new Date(invitation.expiresAt).toLocaleDateString('es-AR')}
                       </div>

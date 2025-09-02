@@ -10,8 +10,7 @@ import {
   CreditCardIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  ClockIcon,
-  PlusIcon
+  ClockIcon
 } from '@heroicons/react/24/outline'
 import NewMaintenanceRequestModal from '../components/Modals/NewMaintenanceRequestModal'
 import NewPaymentModal from '../components/Modals/NewPaymentModal'

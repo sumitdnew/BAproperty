@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useTenants } from '../../hooks/useTenants'
 import { supabase } from '../../lib/supabase'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 
