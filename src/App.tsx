@@ -26,9 +26,17 @@ import './lib/i18n'
 
 
 function App() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Initialize language from saved preference
+  useEffect(() => {
+    const savedLang = localStorage.getItem('i18nextLng') || sessionStorage.getItem('i18nextLng')
+    if (savedLang && savedLang !== i18n.language) {
+      i18n.changeLanguage(savedLang)
+    }
+  }, [i18n])
 
   useEffect(() => {
     // Get initial session

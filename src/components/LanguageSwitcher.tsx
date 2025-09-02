@@ -1,14 +1,30 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
 const LanguageSwitcher: React.FC = () => {
   const { i18n } = useTranslation()
 
-  const changeLanguage = (lang: 'en' | 'es') => {
-    console.log('Changing language to:', lang) // Debug log
-    i18n.changeLanguage(lang)
-    console.log('Current language:', i18n.language) // Debug log
+  const changeLanguage = async (lang: 'en' | 'es') => {
+    try {
+      console.log('Changing language to:', lang) // Debug log
+      await i18n.changeLanguage(lang)
+      console.log('Current language:', i18n.language) // Debug log
+      
+      // Ensure the language is saved to localStorage
+      localStorage.setItem('i18nextLng', lang)
+      sessionStorage.setItem('i18nextLng', lang)
+    } catch (error) {
+      console.error('Error changing language:', error)
+    }
   }
+
+  // Initialize with saved language on component mount
+  useEffect(() => {
+    const savedLang = localStorage.getItem('i18nextLng') || sessionStorage.getItem('i18nextLng')
+    if (savedLang && savedLang !== i18n.language) {
+      changeLanguage(savedLang as 'en' | 'es')
+    }
+  }, [])
 
   return (
     <div className="relative">

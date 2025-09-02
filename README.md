@@ -91,6 +91,9 @@ ba-property-manager/
 │   │   │   ├── Header.tsx
 │   │   │   ├── Layout.tsx
 │   │   │   └── Sidebar.tsx
+│   │   ├── Modals/
+│   │   │   ├── NewMaintenanceRequestModal.tsx
+│   │   │   └── NewPaymentModal.tsx
 │   │   └── LanguageSwitcher.tsx
 │   ├── pages/
 │   │   ├── Dashboard.tsx
@@ -104,6 +107,7 @@ ba-property-manager/
 │   │   ├── i18n.ts
 │   │   └── supabase.ts
 │   ├── hooks/
+│   │   └── useTenants.ts
 │   ├── types/
 │   ├── utils/
 │   ├── App.tsx
@@ -115,6 +119,7 @@ ba-property-manager/
 ├── package.json
 ├── tailwind.config.js
 ├── vite.config.ts
+├── env.example
 └── README.md
 ```
 
@@ -162,10 +167,15 @@ ba-property-manager/
    npm install
    ```
 
-3. **Set up Supabase**
-   - Create a new Supabase project
-   - Get your project URL and anon key
-   - Update `src/lib/supabase.ts` with your credentials
+3. **Set up environment variables**
+   ```bash
+   # Copy the example environment file
+   cp env.example .env
+   
+   # Edit .env with your Supabase credentials
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
 4. **Set up the database**
    ```bash
@@ -187,12 +197,23 @@ ba-property-manager/
 ## 🔧 Configuration
 
 ### Environment Variables
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory by copying from the example:
+
+```bash
+cp env.example .env
+```
+
+Then edit `.env` with your Supabase credentials:
 
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
+
+**For Vercel Deployment:**
+Add these environment variables in your Vercel project settings:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
 ### Database Configuration
 The application uses Supabase with the following key features:
@@ -300,6 +321,9 @@ For support and questions:
 - ✅ User authentication and roles
 - ✅ Basic maintenance system
 - ✅ Payment tracking
+- ✅ Dashboard with real-time updates
+- ✅ Modal forms for quick actions
+- ✅ Multi-language support (English/Spanish)
 
 ### Phase 2 (Planned)
 - 🔄 Advanced analytics dashboard
@@ -316,11 +340,12 @@ For support and questions:
 ## 📊 Current Status
 
 - **Frontend**: ✅ Complete with React + TypeScript
-- **Backend**: ✅ Supabase integration
+- **Backend**: ✅ Supabase integration with environment variables
 - **Database**: ✅ PostgreSQL with comprehensive schema
 - **Authentication**: ✅ Multi-role user system
-- **UI/UX**: ✅ Modern, responsive design
-- **Internationalization**: ✅ Multi-language support
+- **UI/UX**: ✅ Modern, responsive design with modal forms
+- **Internationalization**: ✅ Multi-language support (English/Spanish)
+- **Dashboard**: ✅ Real-time updates with maintenance and payment modals
 - **Documentation**: ✅ Comprehensive README and setup guides
 
 ## 🎯 Key Achievements
@@ -330,6 +355,8 @@ For support and questions:
 - **Modern Tech Stack**: React 18, TypeScript, Supabase, Tailwind CSS
 - **Comprehensive Database**: 17 tables with proper relationships
 - **Real-time Features**: Live updates and notifications
+- **Modal Forms**: Quick action forms for maintenance requests and payments
+- **Environment Configuration**: Supabase keys configurable via environment variables
 - **Production Ready**: Clean code, proper error handling, responsive design
 
 ---

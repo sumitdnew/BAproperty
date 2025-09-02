@@ -9,6 +9,7 @@ const resources = {
       mainDashboard: "Main Dashboard",
       maintenance: "Maintenance", 
       totalRequests: "Total Requests",
+      pendingRequests: "Pending Requests",
       manageRequests: "Manage building maintenance requests",
       thisMonth: "This Month",
       newRequest: "New Request", 
@@ -88,6 +89,24 @@ const resources = {
       request: "Request",
       status: "Status",
       priority: "Priority",
+      category: "Category",
+      enterRequestTitle: "Enter request title",
+      describeTheIssue: "Describe the issue in detail",
+      selectApartment: "Select apartment",
+      createRequest: "Create Request",
+      creating: "Creating...",
+      
+      // New payment modal
+      paymentMethod: "Payment Method",
+      paymentDate: "Payment Date",
+      cash: "Cash",
+      bankTransfer: "Bank Transfer",
+      creditCard: "Credit Card",
+      check: "Check",
+      selectTenant: "Select tenant",
+      enterPaymentDescription: "Enter payment description",
+      createPayment: "Create Payment",
+      
       assignedTo: "Assigned To",
       actions: "Actions",
       unassigned: "Unassigned",
@@ -109,6 +128,7 @@ const resources = {
       // Common
       loading: "Loading...",
       user: "User",
+      title: "Title",
       
       // Payment descriptions
       monthlyRentJanuary: "Monthly rent - January",
@@ -254,7 +274,8 @@ const resources = {
       // Add all your Spanish translations here  
       mainDashboard: "Panel Principal",
       maintenance: "Mantenimiento",
-      totalRequests: "Solicitudes Totales", 
+      totalRequests: "Solicitudes Totales",
+      pendingRequests: "Solicitudes Pendientes", 
       manageRequests: "Gestiona las solicitudes de mantenimiento del edificio",
       thisMonth: "Este Mes", 
       newRequest: "Nueva Solicitud",
@@ -355,6 +376,24 @@ const resources = {
       request: "Solicitud",
       status: "Estado",
       priority: "Prioridad",
+      category: "Categoría",
+      enterRequestTitle: "Ingrese el título de la solicitud",
+      describeTheIssue: "Describa el problema en detalle",
+      selectApartment: "Seleccione apartamento",
+      createRequest: "Crear Solicitud",
+      creating: "Creando...",
+      
+      // New payment modal
+      paymentMethod: "Método de Pago",
+      paymentDate: "Fecha de Pago",
+      cash: "Efectivo",
+      bankTransfer: "Transferencia Bancaria",
+      creditCard: "Tarjeta de Crédito",
+      check: "Cheque",
+      selectTenant: "Seleccionar inquilino",
+      enterPaymentDescription: "Ingrese descripción del pago",
+      createPayment: "Crear Pago",
+      
       assignedTo: "Asignado a",
       actions: "Acciones",
       unassigned: "Sin asignar",
@@ -376,6 +415,7 @@ const resources = {
       // Common
       loading: "Cargando...",
       user: "Usuario",
+      title: "Título",
       
       // Payment descriptions
       monthlyRentJanuary: "Alquiler mensual - Enero",
@@ -524,11 +564,13 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'es', // default language
+    // Remove hardcoded default - let the detector find the saved language
     fallbackLng: 'en',
     detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
-      caches: ['localStorage']
+      order: ['localStorage', 'sessionStorage', 'navigator', 'htmlTag'],
+      caches: ['localStorage', 'sessionStorage'],
+      lookupLocalStorage: 'i18nextLng',
+      lookupSessionStorage: 'i18nextLng'
     },
     interpolation: {
       escapeValue: false
