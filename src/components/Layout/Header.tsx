@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 import LanguageSwitcher from '../LanguageSwitcher'
 import {
   HomeIcon,
@@ -13,7 +14,8 @@ import {
   BellIcon,
   UserCircleIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline'
 
 interface HeaderProps {
@@ -26,7 +28,17 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ user }) => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut()
+      navigate('/')
+    } catch (error) {
+      console.error('Error logging out:', error)
+    }
+  }
 
   const navigationItems = [
     { name: t('mainDashboard'), href: '/', icon: HomeIcon },
@@ -85,6 +97,13 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
               </p>
             </div>
             <UserCircleIcon className="w-8 h-8 text-white" />
+            <button
+              onClick={handleLogout}
+              className="p-2 text-white hover:text-blue-100 transition-colors"
+              title={t('logout')}
+            >
+              <ArrowRightOnRectangleIcon className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>
@@ -136,16 +155,25 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
           
           {/* Mobile user info */}
           <div className="px-4 py-3 border-t border-gray-200">
-            <div className="flex items-center space-x-3">
-              <UserCircleIcon className="w-8 h-8 text-gray-400" />
-              <div>
-                <p className="text-sm font-medium text-gray-900">
-                  {user?.name || t('adminUser')}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {t('administrator')}
-                </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <UserCircleIcon className="w-8 h-8 text-gray-400" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {user?.name || t('adminUser')}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {t('administrator')}
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+                title={t('logout')}
+              >
+                <ArrowRightOnRectangleIcon className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </nav>

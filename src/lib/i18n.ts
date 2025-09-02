@@ -130,6 +130,18 @@ const resources = {
       user: "User",
       title: "Title",
       
+      // Authentication
+      signIn: "Sign In",
+      signUp: "Sign Up",
+      propertyManager: "Property Manager",
+      password: "Password",
+      forgotPassword: "Forgot Password?",
+      dontHaveAccount: "Don't have an account?",
+      required: "required",
+      error: "An error occurred",
+      logout: "Logout",
+      logoutConfirm: "Are you sure you want to logout?",
+      
       // Payment descriptions
       monthlyRentJanuary: "Monthly rent - January",
       extraordinaryExpensesPlumbing: "Extraordinary expenses - Plumbing repair",
@@ -416,6 +428,18 @@ const resources = {
       loading: "Cargando...",
       user: "Usuario",
       title: "Título",
+      
+      // Authentication
+      signIn: "Iniciar Sesión",
+      signUp: "Registrarse",
+      propertyManager: "Administrador de Propiedades",
+      password: "Contraseña",
+      forgotPassword: "¿Olvidaste tu contraseña?",
+      dontHaveAccount: "¿No tienes una cuenta?",
+      required: "requerido",
+      error: "Ocurrió un error",
+      logout: "Cerrar Sesión",
+      logoutConfirm: "¿Estás seguro de que quieres cerrar sesión?",
       
       // Payment descriptions
       monthlyRentJanuary: "Alquiler mensual - Enero",
