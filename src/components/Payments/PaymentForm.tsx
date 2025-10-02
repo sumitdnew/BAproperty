@@ -66,9 +66,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onClose, onSubmit }) => {
           id: tenant.id,
           user_id: tenant.user_id,
           apartment_id: tenant.apartment_id,
-          first_name: tenant.user_profiles?.first_name || '',
-          last_name: tenant.user_profiles?.last_name || '',
-          unit_number: tenant.apartments?.unit_number || ''
+          first_name: tenant.user_profiles?.[0]?.first_name || '',
+          last_name: tenant.user_profiles?.[0]?.last_name || '',
+          unit_number: tenant.apartments?.[0]?.unit_number || ''
         })) || []
 
         setTenants(transformedTenants)

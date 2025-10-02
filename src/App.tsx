@@ -131,7 +131,7 @@ function App() {
     <Router>
       <BuildingProvider>
         {user ? (
-          <Layout user={userData}>
+          <Layout user={userData || undefined}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/buildings" element={<Buildings />} />

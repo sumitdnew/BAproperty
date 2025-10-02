@@ -10,7 +10,7 @@ interface SignupFormProps {
   onLoginClick?: () => void;
 }
 
-const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onLoginClick }) => {
+const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');

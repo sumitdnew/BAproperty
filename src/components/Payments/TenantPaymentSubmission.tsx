@@ -18,7 +18,7 @@ const TenantPaymentSubmission: React.FC<TenantPaymentSubmissionProps> = ({ onClo
   })
   const [proofFile, setProofFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadProgress] = useState(0)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

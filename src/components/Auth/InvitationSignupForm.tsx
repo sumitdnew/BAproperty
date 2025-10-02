@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import LanguageSwitcher from '../LanguageSwitcher';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -18,7 +17,6 @@ interface InvitationData {
 }
 
 const InvitationSignupForm: React.FC = () => {
-  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   

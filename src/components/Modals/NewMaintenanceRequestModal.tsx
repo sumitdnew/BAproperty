@@ -61,7 +61,7 @@ const NewMaintenanceRequestModal: React.FC<NewMaintenanceRequestModalProps> = ({
           description: formData.description.trim(),
           priority: formData.priority,
           status: 'pending',
-          apartment: tenantData.apartments.unit_number,
+          apartment: tenantData.apartments?.[0]?.unit_number || '',
           apartment_id: tenantData.apartment_id,
           tenant_id: user.id // Store the user ID as tenant_id
         })
