@@ -239,17 +239,35 @@ const Payments: React.FC = () => {
     }
   }
 
+  const totalCompletedAmount = payments
+    .filter(p => p.status === 'completed')
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+
+  const totalPendingOrOverdueAmount = payments
+    .filter(p => p.status === 'pending' || p.status === 'overdue')
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+
+  const totalAmountAll = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+
+  const collectionEfficiencyPct = totalAmountAll > 0
+    ? Math.round((totalCompletedAmount / totalAmountAll) * 100)
+    : 0
+
+  const avgPayment = payments.length > 0
+    ? Math.round(totalAmountAll / payments.length)
+    : 0
+
   const paymentStats = [
     {
       title: t('totalIncome'),
-      value: `$${payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0).toLocaleString()}`,
+      value: `$${totalCompletedAmount.toLocaleString()}`,
       icon: CreditCardIcon,
       color: 'green' as const,
       subtitle: t('thisMonth')
     },
     {
       title: t('pendingAmount'),
-      value: `$${payments.filter(p => p.status === 'pending' || p.status === 'overdue').reduce((sum, p) => sum + p.amount, 0).toLocaleString()}`,
+      value: `$${totalPendingOrOverdueAmount.toLocaleString()}`,
       icon: ClockIcon,
       color: 'red' as const,
     },
@@ -389,7 +407,10 @@ const Payments: React.FC = () => {
               <BanknotesIcon className="w-6 h-6 text-green-600" />
             </div>
             <p className="text-2xl font-bold text-gray-900">
-              ${payments.filter(p => p.payment_type === 'rent' && p.status === 'completed').reduce((sum, p) => sum + p.amount, 0).toLocaleString()}
+              ${payments
+                .filter(p => p.payment_type === 'rent' && p.status === 'completed')
+                .reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+                .toLocaleString()}
             </p>
             <p className="text-sm text-gray-600">{t('rentIncome')}</p>
           </div>
@@ -398,9 +419,7 @@ const Payments: React.FC = () => {
             <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-3">
               <CalendarDaysIcon className="w-6 h-6 text-blue-600" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">
-              {Math.round((payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0) / payments.reduce((sum, p) => sum + p.amount, 0)) * 100)}%
-            </p>
+            <p className="text-2xl font-bold text-gray-900">{collectionEfficiencyPct}%</p>
             <p className="text-sm text-gray-600">{t('collectionEfficiency')}</p>
           </div>
           
@@ -408,9 +427,7 @@ const Payments: React.FC = () => {
             <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg mx-auto mb-3">
               <ArrowTrendingUpIcon className="w-6 h-6 text-yellow-600" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">
-              ${Math.round(payments.reduce((sum, p) => sum + p.amount, 0) / payments.length).toLocaleString()}
-            </p>
+            <p className="text-2xl font-bold text-gray-900">${avgPayment.toLocaleString()}</p>
             <p className="text-sm text-gray-600">{t('averagePayment')}</p>
           </div>
         </div>

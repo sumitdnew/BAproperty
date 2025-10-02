@@ -150,9 +150,9 @@ export const useAnalytics = (dateRange: { start: string; end: string } = {
       .gte('date', dateRange.start)
       .lte('date', dateRange.end)
 
-    // Calculate total revenue from completed payments in the date range
-    const totalRevenue = payments?.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0) || 0
-    const totalExpenses = expenses?.reduce((sum, e) => sum + e.amount, 0) || 0
+    // Calculate totals from completed payments in the date range (normalize to numbers)
+    const totalRevenue = payments?.filter(p => p.status === 'completed').reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0
+    const totalExpenses = expenses?.reduce((sum, e) => sum + (Number(e.amount) || 0), 0) || 0
 
     // Debug logging
     console.log('Analytics Revenue Data:', {
@@ -165,16 +165,12 @@ export const useAnalytics = (dateRange: { start: string; end: string } = {
       allPayments: payments
     })
 
-    // If no real data, add some sample data for demonstration
-    const finalRevenue = totalRevenue > 0 ? totalRevenue : Math.floor(Math.random() * 50000) + 10000
-    const finalExpenses = totalExpenses > 0 ? totalExpenses : Math.floor(Math.random() * 20000) + 5000
-
-    // Return single data point for the entire date range
+    // Return single data point for the entire date range (no placeholders)
     return [{
       month: `${dateRange.start} to ${dateRange.end}`,
-      revenue: finalRevenue,
-      expenses: finalExpenses,
-      profit: finalRevenue - finalExpenses
+      revenue: totalRevenue,
+      expenses: totalExpenses,
+      profit: totalRevenue - totalExpenses
     }]
   }
 
@@ -279,9 +275,9 @@ export const useAnalytics = (dateRange: { start: string; end: string } = {
       .gte('due_date', dateRange.start)
       .lte('due_date', dateRange.end)
 
-    const totalAmount = payments?.reduce((sum, p) => sum + p.amount, 0) || 0
-    const collectedAmount = payments?.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0) || 0
-    const overdueAmount = payments?.filter(p => p.status === 'overdue').reduce((sum, p) => sum + p.amount, 0) || 0
+    const totalAmount = payments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0
+    const collectedAmount = payments?.filter(p => p.status === 'completed').reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0
+    const overdueAmount = payments?.filter(p => p.status === 'overdue').reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0
     const collectionRate = totalAmount > 0 ? (collectedAmount / totalAmount) * 100 : 0
 
     // Debug logging
@@ -296,19 +292,13 @@ export const useAnalytics = (dateRange: { start: string; end: string } = {
       allPayments: payments
     })
 
-    // If no real data, add some sample data
-    const finalTotalAmount = totalAmount > 0 ? totalAmount : Math.floor(Math.random() * 100000) + 50000
-    const finalCollectedAmount = collectedAmount > 0 ? collectedAmount : Math.floor(finalTotalAmount * 0.8)
-    const finalOverdueAmount = overdueAmount > 0 ? overdueAmount : Math.floor(finalTotalAmount * 0.1)
-    const finalCollectionRate = finalTotalAmount > 0 ? (finalCollectedAmount / finalTotalAmount) * 100 : 85
-
-    // Return single data point for the entire date range
+    // Return single data point for the entire date range (no placeholders)
     return [{
       month: `${dateRange.start} to ${dateRange.end}`,
-      total_amount: finalTotalAmount,
-      collected_amount: finalCollectedAmount,
-      overdue_amount: finalOverdueAmount,
-      collection_rate: finalCollectionRate
+      total_amount: totalAmount,
+      collected_amount: collectedAmount,
+      overdue_amount: overdueAmount,
+      collection_rate: collectionRate
     }]
   }
 

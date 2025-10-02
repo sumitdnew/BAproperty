@@ -34,6 +34,25 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       }
 
       if (data.user) {
+        // Fetch user profile to determine role and redirect accordingly
+        try {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('user_type')
+            .eq('id', data.user.id)
+            .single();
+
+          const userType = profile?.user_type || (data.user as any)?.user_metadata?.user_type || 'tenant';
+          if (userType === 'tenant') {
+            navigate('/tenant-main-dashboard');
+          } else {
+            // managers/admins
+            navigate('/');
+          }
+        } catch (e) {
+          // Fallback to main dashboard
+          navigate('/');
+        }
         onSuccess?.();
       }
     } catch (err: any) {

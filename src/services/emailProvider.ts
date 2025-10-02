@@ -6,7 +6,7 @@ declare global {
   interface Window {
     emailjs: {
       init: (config: { publicKey: string; blockHeadless?: boolean }) => void
-      send: (serviceId: string, templateId: string, params: any) => Promise<any>
+      send: (serviceId: string, templateId: string, params: any, options?: any) => Promise<any>
     }
   }
 }

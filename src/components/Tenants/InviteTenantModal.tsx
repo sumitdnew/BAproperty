@@ -111,8 +111,8 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({ isOpen, onClose, 
         throw new Error('Database schema test failed. Please run the migration scripts first.')
       }
       // Try admin invitation first, fallback to regular signup if not available
-      let authData = null
-      let authError = null
+      let authData: { user: { id: string } | null } | null = null
+      let authError: any = null
 
       // Check if admin client is properly configured
       const serviceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
@@ -144,7 +144,8 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({ isOpen, onClose, 
             authData = createUserResult.data
             authError = null
             // Store the password for the email
-            const authDataWithPassword = { ...authData, tempPassword }
+            // For email template only; avoid unused variable errors
+            const tempPassForEmail = tempPassword
             
             // Create user profile
             console.log('👤 Creating user profile...')
@@ -180,7 +181,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({ isOpen, onClose, 
         authData = { user: null }
         
         // Show warning to user if service role key is missing
-        if (authError?.message === 'Service role key not configured') {
+        if ((authError as any)?.message === 'Service role key not configured') {
           console.warn('⚠️ Service role key not configured. User will need to sign up manually.')
         }
       }
