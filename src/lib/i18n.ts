@@ -29,6 +29,7 @@ const resources = {
       approve: "Approve",
       reject: "Reject",
       actions: "Actions",
+      all: "All",
       
       // Status
       pending: "Pending",
@@ -448,6 +449,7 @@ const resources = {
       submit: "Enviar",
       approve: "Aprobar",
       reject: "Rechazar",
+      all: "Todos",
       
       // Status
       pending: "Pendiente",

@@ -34,6 +34,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { buildings, selectedBuildingId, setSelectedBuildingId, loading } = useBuildingContext()
+  
 
   const handleLogout = async () => {
     try {

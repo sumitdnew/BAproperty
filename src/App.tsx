@@ -8,6 +8,7 @@ import Layout from './components/Layout/Layout'
 import { BuildingProvider } from './context/BuildingContext'
 import LoginForm from './components/Auth/LoginForm'
 import SignupForm from './components/Auth/SignupForm'
+import Logo from './components/Brand/Logo'
 import InvitationSignupForm from './components/Auth/InvitationSignupForm'
 import Dashboard from './pages/Dashboard'
 import Buildings from './pages/Buildings'
@@ -97,15 +98,10 @@ function App() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <div className="w-10 h-10 bg-white rounded grid grid-cols-2 gap-0.5">
-              <div className="bg-blue-600 rounded-sm"></div>
-              <div className="bg-blue-600 rounded-sm"></div>
-              <div className="bg-blue-600 rounded-sm"></div>
-              <div className="bg-blue-600 rounded-sm"></div>
-            </div>
+          <div className="mb-4">
+            <Logo size="lg" pinColor="#FF385C" textColor="#1F2937" />
           </div>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-4"></div>
           <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>

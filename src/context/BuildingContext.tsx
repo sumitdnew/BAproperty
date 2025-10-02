@@ -40,34 +40,34 @@ export const BuildingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       let mapped: AccessibleBuilding[] = []
 
-      // First, try to get buildings from admin_building_access (for admins)
-      const { data: accessData, error: accessError } = await supabase
-        .from('admin_building_access')
-        .select('building_id, buildings ( id, name )')
-        .eq('admin_id', userId)
+      // First, check if user is a tenant
+      const { data: tenantData, error: tenantError } = await supabase
+        .from('tenants')
+        .select('apartment_id, apartments ( building_id, buildings ( id, name ) )')
+        .eq('user_id', userId)
+        .single()
 
-      if (accessData && accessData.length > 0) {
-        // User has admin access to specific buildings
-        mapped = accessData
-          .map((row: any) => ({ id: row.buildings?.id || row.building_id, name: row.buildings?.name || 'Building' }))
-          .filter((b: AccessibleBuilding) => Boolean(b.id))
+      if (tenantData && tenantData.apartments?.[0]?.buildings) {
+        // User is a tenant, show only their building
+        mapped = [{
+          id: tenantData.apartments[0].buildings[0].id,
+          name: tenantData.apartments[0].buildings[0].name
+        }]
       } else {
-        // Check if user is a tenant and get their building
-        const { data: tenantData, error: tenantError } = await supabase
-          .from('tenants')
-          .select('apartment_id, apartments ( building_id, buildings ( id, name ) )')
-          .eq('user_id', userId)
-          .single()
+        // User is not a tenant, check admin access or load all buildings
+        const { data: accessData, error: accessError } = await supabase
+          .from('admin_building_access')
+          .select('building_id, buildings ( id, name )')
+          .eq('admin_id', userId)
 
-        if (tenantData && tenantData.apartments?.[0]?.buildings) {
-          // User is a tenant, show only their building
-          mapped = [{
-            id: tenantData.apartments[0].buildings[0].id,
-            name: tenantData.apartments[0].buildings[0].name
-          }]
+
+        if (accessData && accessData.length > 0) {
+          // User has admin access to specific buildings
+          mapped = accessData
+            .map((row: any) => ({ id: row.buildings?.id || row.building_id, name: row.buildings?.name || 'Building' }))
+            .filter((b: AccessibleBuilding) => Boolean(b.id))
         } else {
-          // Fallback: load all buildings (for testing/development only)
-          console.log('No specific building access found, loading all buildings (development mode)')
+          // Fallback: load all buildings (for admins/managers without specific access)
           const { data: allBuildings, error: buildingsError } = await supabase
             .from('buildings')
             .select('id, name')
