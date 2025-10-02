@@ -223,7 +223,7 @@ const Analytics: React.FC = () => {
                 }
               ]}
               layout={{
-                title: { text: '' },
+                title: { text: t('revenueTrend') },
                 xaxis: { title: t('month') },
                 yaxis: { title: t('amount') },
                 height: 300,
@@ -253,7 +253,7 @@ const Analytics: React.FC = () => {
                 }
               ]}
               layout={{
-                title: { text: '' },
+                title: { text: t('revenueTrend') },
                 xaxis: { title: t('month') },
                 yaxis: { title: t('amount') },
                 height: 300,
@@ -298,7 +298,7 @@ const Analytics: React.FC = () => {
                 }
               ]}
               layout={{
-                title: { text: '' },
+                title: { text: t('revenueTrend') },
                 xaxis: { title: t('building') },
                 yaxis: { title: t('occupancyRate') + ' (%)' },
                 height: 300,
@@ -325,7 +325,7 @@ const Analytics: React.FC = () => {
                 }
               ]}
               layout={{
-                title: { text: '' },
+                title: { text: t('revenueTrend') },
                 height: 300,
                 margin: { t: 20, r: 20, b: 20, l: 20 },
                 showlegend: true
@@ -421,7 +421,7 @@ const Analytics: React.FC = () => {
                 }
               ]}
               layout={{
-                title: { text: '' },
+                title: { text: t('revenueTrend') },
                 xaxis: { title: t('month') },
                 yaxis: { title: t('numberOfRequests') },
                 height: 300,
@@ -449,7 +449,7 @@ const Analytics: React.FC = () => {
                 }
               ]}
               layout={{
-                title: { text: '' },
+                title: { text: t('revenueTrend') },
                 xaxis: { title: t('month') },
                 yaxis: { title: t('cost') },
                 height: 300,
@@ -535,7 +535,7 @@ const Analytics: React.FC = () => {
                 }
               ]}
               layout={{
-                title: { text: '' },
+                title: { text: t('revenueTrend') },
                 xaxis: { title: t('month') },
                 yaxis: { title: t('collectionRate') + ' (%)' },
                 height: 300,
@@ -573,7 +573,7 @@ const Analytics: React.FC = () => {
                 }
               ]}
               layout={{
-                title: { text: '' },
+                title: { text: t('revenueTrend') },
                 xaxis: { title: t('month') },
                 yaxis: { title: t('amount') },
                 height: 300,

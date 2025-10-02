@@ -59,11 +59,11 @@ export const BuildingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           .eq('user_id', userId)
           .single()
 
-        if (tenantData && tenantData.apartments?.buildings) {
+        if (tenantData && tenantData.apartments?.[0]?.buildings) {
           // User is a tenant, show only their building
           mapped = [{
-            id: tenantData.apartments.buildings.id,
-            name: tenantData.apartments.buildings.name
+            id: tenantData.apartments[0].buildings[0].id,
+            name: tenantData.apartments[0].buildings[0].name
           }]
         } else {
           // Fallback: load all buildings (for testing/development only)

@@ -144,7 +144,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({ isOpen, onClose, 
             authData = createUserResult.data
             authError = null
             // Store the password for the email
-            authData.tempPassword = tempPassword
+            const authDataWithPassword = { ...authData, tempPassword }
             
             // Create user profile
             console.log('👤 Creating user profile...')
@@ -180,7 +180,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({ isOpen, onClose, 
         authData = { user: null }
         
         // Show warning to user if service role key is missing
-        if (authError.message === 'Service role key not configured') {
+        if (authError?.message === 'Service role key not configured') {
           console.warn('⚠️ Service role key not configured. User will need to sign up manually.')
         }
       }
@@ -197,7 +197,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({ isOpen, onClose, 
           invitation_type: 'tenant',
           status: 'sent',
           message: formData.message,
-          auth_user_id: authData.user?.id || null,
+          auth_user_id: authData?.user?.id || null,
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
         })
 
@@ -259,7 +259,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({ isOpen, onClose, 
         const { data: tenantData, error: tenantError } = await supabase
           .from('tenants')
           .insert({
-            user_id: authData.user?.id || null,
+            user_id: authData?.user?.id || null,
             apartment_id: formData.apartment_id,
             lease_start_date: new Date().toISOString().split('T')[0], // Date format for DATE column
             lease_end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year from now
@@ -297,7 +297,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({ isOpen, onClose, 
         name: `${formData.first_name} ${formData.last_name}`,
         building: formData.building_id,
         apartment: formData.apartment_id,
-        authUserId: authData.user?.id,
+        authUserId: authData?.user?.id,
         tenantActive: false,
         apartmentOccupied: true,
         depositAmount: selectedApartment.monthly_rent * 2,
@@ -340,6 +340,24 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({ isOpen, onClose, 
       ...prev,
       [name]: value
     }))
+  }
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    
+    // If building changed, fetch apartments for that building
+    if (name === 'building_id') {
+      setFormData(prev => ({ ...prev, apartment_id: '' })) // Clear apartment selection
+      if (value) {
+        fetchApartments(value)
+      } else {
+        setApartments([])
+      }
+    }
   }
 
   if (!isOpen) return null
@@ -508,7 +526,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({ isOpen, onClose, 
                 <select
                   name="building_id"
                   value={formData.building_id}
-                  onChange={handleInputChange}
+                  onChange={handleSelectChange}
                   required
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
@@ -528,7 +546,7 @@ const InviteTenantModal: React.FC<InviteTenantModalProps> = ({ isOpen, onClose, 
                 <select
                   name="apartment_id"
                   value={formData.apartment_id}
-                  onChange={handleInputChange}
+                  onChange={handleSelectChange}
                   required
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={!formData.building_id || loadingApartments}

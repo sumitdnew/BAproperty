@@ -241,6 +241,24 @@ const InviteTenantModalSimple: React.FC<InviteTenantModalProps> = ({ isOpen, onC
     }))
   }
 
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    
+    // If building changed, fetch apartments for that building
+    if (name === 'building_id') {
+      setFormData(prev => ({ ...prev, apartment_id: '' })) // Clear apartment selection
+      if (value) {
+        fetchApartments(value)
+      } else {
+        setApartments([])
+      }
+    }
+  }
+
   if (!isOpen) return null
 
   if (success) {
@@ -412,7 +430,7 @@ const InviteTenantModalSimple: React.FC<InviteTenantModalProps> = ({ isOpen, onC
                 <select
                   name="building_id"
                   value={formData.building_id}
-                  onChange={handleInputChange}
+                  onChange={handleSelectChange}
                   required
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
@@ -432,7 +450,7 @@ const InviteTenantModalSimple: React.FC<InviteTenantModalProps> = ({ isOpen, onC
                 <select
                   name="apartment_id"
                   value={formData.apartment_id}
-                  onChange={handleInputChange}
+                  onChange={handleSelectChange}
                   required
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={!formData.building_id || loadingApartments}
