@@ -1,6 +1,10 @@
 // pages/Invitations.tsx
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { supabase } from '../lib/supabase'
+import InviteTenantModalSimple from '../components/Tenants/InviteTenantModalSimple'
+import emailjs from '@emailjs/browser'
+import { useBuildingContext } from '../context/BuildingContext'
 import { 
   EnvelopeIcon,
   MagnifyingGlassIcon,
@@ -8,74 +12,89 @@ import {
   UserPlusIcon,
   ClockIcon,
   CheckCircleIcon,
-  XCircleIcon,
-  PaperAirplaneIcon,
   HomeIcon
 } from '@heroicons/react/24/outline'
 
+interface InvitationRow {
+  id: string
+  email: string
+  first_name: string
+  last_name: string
+  building_id: string
+  apartment_id: string
+  invitation_type: string
+  status: 'pending' | 'sent' | 'accepted' | 'declined' | 'expired' | 'cancelled'
+  message?: string
+  accepted_at?: string
+  expires_at?: string
+  created_at?: string
+  apartments?: { unit_number: string, buildings?: { name: string } }
+}
+
 const Invitations: React.FC = () => {
   const { t } = useTranslation()
+  const { selectedBuildingId } = useBuildingContext()
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'sent' | 'accepted' | 'declined' | 'expired' | 'cancelled'>('all')
   const [showInviteModal, setShowInviteModal] = useState(false)
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [selectedInvitation, setSelectedInvitation] = useState<InvitationRow | null>(null)
+  const [resendingId, setResendingId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [rows, setRows] = useState<InvitationRow[]>([])
 
-  // Mock sent invitations data
-  const sentInvitations = [
-    {
-      id: 1,
-      email: 'juan.perez@email.com',
-      firstName: 'Juan',
-      lastName: 'Pérez',
-      apartment: '2D',
-      role: 'tenant',
-      status: 'pending',
-      sentAt: '2024-01-28T10:00:00',
-      expiresAt: '2024-02-04T10:00:00',
-      phone: '+54 11 1234-5678',
-      message: 'Te invitamos a unirte a la comunidad del Edificio Central como inquilino del departamento 2D.'
-    },
-    {
-      id: 2,
-      email: 'maria.lopez@email.com',
-      firstName: 'María',
-      lastName: 'López',
-      apartment: '1A',
-      role: 'owner',
-      status: 'accepted',
-      sentAt: '2024-01-25T14:30:00',
-      acceptedAt: '2024-01-26T09:15:00',
-      phone: '+54 11 2345-6789',
-      message: 'Bienvenida como nueva propietaria del departamento 1A en nuestro edificio.'
-    },
-    {
-      id: 3,
-      email: 'carlos.martinez@email.com',
-      firstName: 'Carlos',
-      lastName: 'Martínez',
-      apartment: '4B',
-      role: 'tenant',
-      status: 'expired',
-      sentAt: '2024-01-15T16:45:00',
-      expiresAt: '2024-01-22T16:45:00',
-      phone: '+54 11 3456-7890',
-      message: 'Invitación para unirse como inquilino del departamento 4B.'
-    },
-    {
-      id: 4,
-      email: 'ana.silva@email.com',
-      firstName: 'Ana',
-      lastName: 'Silva',
-      apartment: '3C',
-      role: 'tenant',
-      status: 'declined',
-      sentAt: '2024-01-20T11:20:00',
-      declinedAt: '2024-01-21T18:30:00',
-      phone: '+54 11 4567-8901',
-      message: 'Te invitamos a formar parte de nuestra comunidad como inquilina del 3C.'
+  // Load invitations from DB
+  const loadInvitations = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      let query = supabase
+        .from('invitations')
+        .select(`
+          id,
+          email,
+          first_name,
+          last_name,
+          building_id,
+          apartment_id,
+          invitation_type,
+          status,
+          message,
+          accepted_at,
+          expires_at,
+          apartments:apartments!inner(
+            unit_number,
+            buildings:buildings!inner(name)
+          )
+        `)
+        .order('accepted_at', { ascending: false, nullsFirst: false })
+      if (selectedBuildingId !== 'all') {
+        query = query.eq('apartments.building_id', selectedBuildingId)
+      }
+      const { data, error } = await query
+      if (error) throw error
+      setRows((data || []) as any)
+    } catch (err: any) {
+      setError(err.message || 'Failed to load invitations')
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
 
-  // Mock invitation templates
+  useEffect(() => {
+    loadInvitations()
+    // listen to table changes
+    const sub = supabase
+      .channel('invitations')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'invitations' }, () => {
+        loadInvitations()
+      })
+      .subscribe()
+    return () => { sub.unsubscribe() }
+  }, [selectedBuildingId])
+
+  // Invitation templates (static copy)
   const invitationTemplates = [
     {
       id: 1,
@@ -96,9 +115,11 @@ const Invitations: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+      case 'sent': return 'bg-yellow-100 text-yellow-800 border border-yellow-200'
       case 'accepted': return 'bg-green-100 text-green-800 border border-green-200'
       case 'declined': return 'bg-red-100 text-red-800 border border-red-200'
       case 'expired': return 'bg-gray-100 text-gray-800 border border-gray-200'
+      case 'cancelled': return 'bg-gray-100 text-gray-500 border border-gray-200'
       default: return 'bg-gray-100 text-gray-800 border border-gray-200'
     }
   }
@@ -112,19 +133,116 @@ const Invitations: React.FC = () => {
     }
   }
 
-  const filteredInvitations = sentInvitations.filter(invitation => {
-    const matchesSearch = `${invitation.firstName} ${invitation.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         invitation.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         invitation.apartment.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || invitation.status === statusFilter
+  const filteredInvitations = useMemo(() => {
+    const term = searchTerm.toLowerCase()
+    return rows.filter((inv) => {
+      const fullName = `${inv.first_name || ''} ${inv.last_name || ''}`.trim().toLowerCase()
+      const apt = inv.apartments?.unit_number?.toLowerCase() || ''
+      const matchesSearch = fullName.includes(term) || (inv.email || '').toLowerCase().includes(term) || apt.includes(term)
+      const matchesStatus = statusFilter === 'all'
+        ? inv.status !== 'cancelled'
+        : statusFilter === 'pending'
+          ? (inv.status === 'pending' || inv.status === 'sent')
+          : inv.status === statusFilter
     return matchesSearch && matchesStatus
   })
+  }, [rows, searchTerm, statusFilter])
+
+  const cancelInvitation = async (invitation: InvitationRow) => {
+    try {
+      if (!(invitation.status === 'sent' || invitation.status === 'pending')) {
+        alert(t('onlyPendingInvitationsCanBeCancelled') || 'Only pending invitations can be cancelled')
+        return
+      }
+      if (!confirm(t('areYouSureCancelInvitation') || 'Are you sure you want to cancel this invitation?')) return
+      // Best-effort cleanup: remove placeholder tenants and un-occupy apartment if no active tenant
+      if (invitation.apartment_id) {
+        // Delete placeholder tenant rows (user_id is NULL)
+        await supabase
+          .from('tenants')
+          .delete()
+          .eq('apartment_id', invitation.apartment_id)
+          .is('user_id', null)
+
+        // Check if an active tenant exists for this apartment
+        const { data: activeTenants, error: activeErr } = await supabase
+          .from('tenants')
+          .select('id')
+          .eq('apartment_id', invitation.apartment_id)
+          .eq('is_active', true)
+          .not('user_id', 'is', null)
+        if (!activeErr && (activeTenants?.length || 0) === 0) {
+          await supabase
+            .from('apartments')
+            .update({ is_occupied: false })
+            .eq('id', invitation.apartment_id)
+        }
+      }
+      // Soft delete the invitation: mark as cancelled and clear accepted_at/auth_user_id
+      const { error } = await supabase
+        .from('invitations')
+        .update({ status: 'cancelled', accepted_at: null, auth_user_id: null })
+        .eq('id', invitation.id)
+      if (error) throw error
+      await loadInvitations()
+    } catch (err: any) {
+      alert(err.message || 'Failed to cancel invitation')
+    }
+  }
+
+  const openView = (invitation: InvitationRow) => {
+    setSelectedInvitation(invitation)
+    setShowViewModal(true)
+  }
+
+  const buildSignupUrl = (invitation: InvitationRow) => {
+    return `${window.location.origin}/invite?invitation=${invitation.id}&email=${encodeURIComponent(invitation.email)}`
+  }
+
+  const resendInvitation = async (invitation: InvitationRow) => {
+    try {
+      setResendingId(invitation.id)
+      // Prepare EmailJS params similar to invite modal
+      const envKey = (import.meta as any).env?.VITE_EMAILJS_USER_ID
+      const emailjsPublicKey = envKey === 'E0G-u44Ys9PBcy6gP' ? '2eD5KJ_H_t0llmv08' : envKey
+      const serviceId = 'service_7n6g698'
+      const templateId = 'template_ln74jmx'
+
+      const params: Record<string, any> = {
+        user_name: `${invitation.first_name || ''} ${invitation.last_name || ''}`.trim() || invitation.email,
+        user_email: invitation.email,
+        building_name: invitation.apartments?.buildings?.name || '',
+        apartment_unit: invitation.apartments?.unit_number || '',
+        temp_password: 'TempPass123!',
+        login_url: `${window.location.origin}/login`,
+        signup_url: buildSignupUrl(invitation),
+        message: invitation.message || ''
+      }
+
+      await emailjs.send(serviceId, templateId, params, { publicKey: emailjsPublicKey })
+
+      // Extend expiration by 7 days and keep status as sent (or accepted stays accepted)
+      const newExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      const { error } = await supabase
+        .from('invitations')
+        .update({ expires_at: newExpiry })
+        .eq('id', invitation.id)
+      if (error) throw error
+
+      await loadInvitations()
+      alert(t('invitationResent') || 'Invitation resent')
+    } catch (err: any) {
+      alert(err.message || 'Failed to resend invitation')
+    } finally {
+      setResendingId(null)
+    }
+  }
 
   const stats = {
-    total: sentInvitations.length,
-    pending: sentInvitations.filter(i => i.status === 'pending').length,
-    accepted: sentInvitations.filter(i => i.status === 'accepted').length,
-    expired: sentInvitations.filter(i => i.status === 'expired').length
+    total: rows.length,
+    pending: rows.filter(i => i.status === 'sent').length,
+    accepted: rows.filter(i => i.status === 'accepted').length,
+    expired: rows.filter(i => i.status === 'expired').length
   }
 
   return (
@@ -143,6 +261,11 @@ const Invitations: React.FC = () => {
           <span>{t('sendInvitation')}</span>
         </button>
       </div>
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -213,14 +336,15 @@ const Invitations: React.FC = () => {
           
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
             className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">{t('allStatuses')}</option>
-            <option value="pending">{t('pending')}</option>
+            <option value="sent">{t('pending')}</option>
             <option value="accepted">{t('accepted')}</option>
             <option value="declined">{t('declined')}</option>
             <option value="expired">{t('expired')}</option>
+            <option value="cancelled">{t('cancelled') || 'Cancelled'}</option>
           </select>
         </div>
       </div>
@@ -235,7 +359,7 @@ const Invitations: React.FC = () => {
             <div className="flex items-center space-x-2">
               <FunnelIcon className="w-5 h-5 text-gray-400" />
               <span className="text-sm text-gray-600">
-                {filteredInvitations.length} {t('of')} {sentInvitations.length}
+                {filteredInvitations.length} {t('of')} {rows.length}
               </span>
             </div>
           </div>
@@ -272,12 +396,12 @@ const Invitations: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                         <span className="text-blue-600 font-medium">
-                          {invitation.firstName[0]}{invitation.lastName[0]}
+                          {(invitation.first_name || '?')[0]}{(invitation.last_name || '?')[0]}
                         </span>
                       </div>
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {invitation.firstName} {invitation.lastName}
+                          {invitation.first_name} {invitation.last_name}
                         </div>
                         <div className="text-sm text-gray-500">
                           {invitation.email}
@@ -289,50 +413,50 @@ const Invitations: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <HomeIcon className="w-4 h-4 text-gray-400" />
                       <span className="text-sm font-medium text-gray-900">
-                        {invitation.apartment}
+                        {invitation.apartments?.unit_number || '—'}
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleColor(invitation.role)}`}>
-                      {t(invitation.role)}
+                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleColor(invitation.invitation_type)}`}>
+                      {t(invitation.invitation_type)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(invitation.status)}`}>
                       {t(invitation.status)}
                     </span>
-                    {invitation.status === 'pending' && invitation.expiresAt && (
+                    {invitation.status === 'sent' && invitation.expires_at && (
                       <div className="text-xs text-gray-500 mt-1">
-                        {t('expires')}: {new Date(invitation.expiresAt).toLocaleDateString('es-AR')}
+                        {t('expires')}: {new Date(invitation.expires_at).toLocaleDateString('es-AR')}
                       </div>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {new Date(invitation.sentAt).toLocaleDateString('es-AR')}
+                      {(invitation.accepted_at || invitation.expires_at) ? new Date(invitation.accepted_at || invitation.expires_at as string).toLocaleDateString('es-AR') : '—'}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {new Date(invitation.sentAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                      {(invitation.accepted_at || invitation.expires_at) ? new Date(invitation.accepted_at || invitation.expires_at as string).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : ''}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900 transition-colors">
+                      <button className="text-blue-600 hover:text-blue-900 transition-colors" onClick={() => openView(invitation)}>
                         {t('view')}
                       </button>
-                      {invitation.status === 'pending' && (
+                      {(invitation.status === 'sent' || invitation.status === 'pending') && (
                         <>
-                          <button className="text-green-600 hover:text-green-900 transition-colors">
+                          <button className="text-green-600 hover:text-green-900 transition-colors" onClick={() => resendInvitation(invitation)} disabled={resendingId === invitation.id}>
                             {t('resend')}
                           </button>
-                          <button className="text-red-600 hover:text-red-900 transition-colors">
+                          <button className="text-red-600 hover:text-red-900 transition-colors" onClick={() => cancelInvitation(invitation)}>
                             {t('cancel')}
                           </button>
                         </>
                       )}
                       {invitation.status === 'expired' && (
-                        <button className="text-green-600 hover:text-green-900 transition-colors">
+                        <button className="text-green-600 hover:text-green-900 transition-colors" onClick={() => resendInvitation(invitation)} disabled={resendingId === invitation.id}>
                           {t('resend')}
                         </button>
                       )}
@@ -376,109 +500,61 @@ const Invitations: React.FC = () => {
 
       {/* Invite Modal - Simple placeholder */}
       {showInviteModal && (
+        <InviteTenantModalSimple
+          isOpen={showInviteModal}
+          onClose={() => setShowInviteModal(false)}
+          onSuccess={() => {
+            setShowInviteModal(false)
+            loadInvitations()
+          }}
+        />
+      )}
+
+      {showViewModal && selectedInvitation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">{t('sendInvitation')}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('invitationDetails')}</h3>
               <button 
-                onClick={() => setShowInviteModal(false)}
+                onClick={() => setShowViewModal(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <XCircleIcon className="w-6 h-6" />
+                ×
               </button>
             </div>
-            
-            <div className="space-y-4">
+            <div className="space-y-3 text-sm text-gray-700">
+              <div><strong>{t('invitee')}:</strong> {selectedInvitation.first_name} {selectedInvitation.last_name} &lt;{selectedInvitation.email}&gt;</div>
+              <div><strong>{t('building')}:</strong> {selectedInvitation.apartments?.buildings?.name || '—'}</div>
+              <div><strong>{t('apartment')}:</strong> {selectedInvitation.apartments?.unit_number || '—'}</div>
+              <div><strong>{t('status')}:</strong> {t(selectedInvitation.status)}</div>
+              <div><strong>{t('expires')}:</strong> {selectedInvitation.expires_at ? new Date(selectedInvitation.expires_at).toLocaleString() : '—'}</div>
+              {selectedInvitation.message && (
+                <div><strong>{t('message')}:</strong> {selectedInvitation.message}</div>
+              )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('email')}
-                </label>
-                <input
-                  type="email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="ejemplo@email.com"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('firstName')}
-                  </label>
+                <strong>{t('inviteLink')}:</strong>
+                <div className="mt-1 flex items-center space-x-2">
                   <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Juan"
+                    readOnly
+                    className="flex-1 border border-gray-300 rounded px-2 py-1 text-xs"
+                    value={buildSignupUrl(selectedInvitation)}
                   />
+                  <button
+                    className="px-2 py-1 text-xs bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
+                    onClick={() => navigator.clipboard.writeText(buildSignupUrl(selectedInvitation))}
+                  >
+                    {t('copy')}
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('lastName')}
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Pérez"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('apartment')}
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="2A"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('role')}
-                  </label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="tenant">{t('tenant')}</option>
-                    <option value="owner">{t('owner')}</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('phone')} ({t('optional')})
-                </label>
-                <input
-                  type="tel"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="+54 11 1234-5678"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('message')} ({t('optional')})
-                </label>
-                <textarea
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={t('personalMessageForInvitee')}
-                />
               </div>
             </div>
-            
-            <div className="flex justify-end space-x-3 mt-6">
-              <button 
-                onClick={() => setShowInviteModal(false)}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                {t('cancel')}
-              </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center space-x-2 transition-colors">
-                <PaperAirplaneIcon className="w-4 h-4" />
-                <span>{t('sendInvitation')}</span>
-              </button>
+            <div className="flex justify-end space-x-2 mt-6">
+              <button className="px-3 py-2 text-sm border border-gray-300 rounded" onClick={() => setShowViewModal(false)}>{t('close')}</button>
+              {(selectedInvitation.status === 'sent' || selectedInvitation.status === 'expired') && (
+                <button className="px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700" onClick={() => resendInvitation(selectedInvitation)} disabled={resendingId === selectedInvitation.id}>
+                  {t('resend')}
+                </button>
+              )}
             </div>
           </div>
         </div>

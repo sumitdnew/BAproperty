@@ -4,7 +4,7 @@ interface StatsCardProps {
   title: string;
   value: string | number;
   icon: React.ComponentType<{ className?: string }>;
-  color: 'blue' | 'green' | 'yellow' | 'red';
+  color: 'blue' | 'green' | 'yellow' | 'red' | 'rose' | 'orange';
   subtitle?: string;
 }
 
@@ -35,6 +35,16 @@ const StatsCard: React.FC<StatsCardProps> = ({
       iconBg: 'bg-red-100',
       iconColor: 'text-red-600',
       border: 'border-red-200'
+    },
+    rose: {
+      iconBg: 'bg-rose-100',
+      iconColor: 'text-rose-600',
+      border: 'border-rose-200'
+    },
+    orange: {
+      iconBg: 'bg-orange-100',
+      iconColor: 'text-orange-600',
+      border: 'border-orange-200'
     }
   };
 

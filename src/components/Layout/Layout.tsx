@@ -1,5 +1,4 @@
 import React from 'react'
-import Sidebar from './Sidebar'
 import Header from './Header'
 
 interface LayoutProps {
@@ -13,14 +12,11 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, user }) => {
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <Header user={user} />
-        <main className="flex-1 overflow-auto p-6">
-          {children}
-        </main>
-      </div>
+    <div className="min-h-screen bg-white">
+      <Header user={user} />
+      <main className="p-4 sm:p-6">
+        {children}
+      </main>
     </div>
   )
 }

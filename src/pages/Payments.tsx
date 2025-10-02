@@ -1,7 +1,12 @@
 // pages/Payments.tsx
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import StatsCard from '../components/Dashboard/StatsCard'
+import { usePayments } from '../hooks/usePayments'
+import TenantPaymentSubmission from '../components/Payments/TenantPaymentSubmission'
+import PaymentApprovalModal from '../components/Payments/PaymentApprovalModal'
+import { supabase } from '../lib/supabase'
+import EmailService from '../services/emailService'
 import { 
   CreditCardIcon, 
   ClockIcon, 
@@ -19,80 +24,220 @@ const Payments: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [periodFilter, setPeriodFilter] = useState('thisMonth')
+  const [showTenantSubmission, setShowTenantSubmission] = useState(false)
+  const [selectedPaymentForReview, setSelectedPaymentForReview] = useState<any>(null)
 
-  // Mock payments data
-  const payments = [
-    {
-      id: 1,
-      tenantName: 'María González',
-      apartment: '3A',
-      amount: 85000,
-      currency: 'ARS',
-      paymentType: 'rent',
-      paymentMethod: 'bank_transfer',
-      status: 'completed',
-      dueDate: '2024-01-05',
-      paidDate: '2024-01-03',
-      description: t('monthlyRentJanuary'),
-      reference: 'TR001234567'
-    },
-    {
-      id: 2,
-      tenantName: 'Carlos Rodríguez',
-      apartment: '1B',
-      amount: 92000,
-      currency: 'ARS',
-      paymentType: 'rent',
-      paymentMethod: 'cash',
-      status: 'overdue',
-      dueDate: '2024-01-05',
-      paidDate: null,
-      description: t('monthlyRentJanuary'),
-      reference: null
-    },
-    {
-      id: 3,
-      tenantName: 'Ana Silva',
-      apartment: '2C',
-      amount: 78000,
-      currency: 'ARS',
-      paymentType: 'rent',
-      paymentMethod: 'bank_transfer',
-      status: 'completed',
-      dueDate: '2024-01-05',
-      paidDate: '2024-01-04',
-      description: t('monthlyRentJanuary'),
-      reference: 'TR001234568'
-    },
-    {
-      id: 4,
-      tenantName: 'Roberto Martínez',
-      apartment: '4A',
-      amount: 25000,
-      currency: 'ARS',
-      paymentType: 'maintenance',
-      paymentMethod: 'bank_transfer',
-      status: 'pending',
-      dueDate: '2024-01-10',
-      paidDate: null,
-      description: t('extraordinaryExpensesPlumbing'),
-      reference: null
-    },
-    {
-      id: 5,
-      tenantName: 'Laura Fernández',
-      apartment: '2B',
-      amount: 89000,
-      currency: 'ARS',
-      paymentType: 'rent',
-      paymentMethod: 'debit_card',
-      status: 'completed',
-      dueDate: '2024-01-05',
-      paidDate: '2024-01-05',
-      description: t('monthlyRentJanuary'),
-      reference: 'DC789123456'
+  // Calculate date range based on period filter using useMemo to prevent infinite loops
+  const dateRange = useMemo(() => {
+    const now = new Date()
+    const start = new Date()
+    
+    switch (periodFilter) {
+      case 'thisMonth':
+        start.setDate(1)
+        break
+      case 'lastMonth':
+        start.setMonth(now.getMonth() - 1, 1)
+        break
+      case 'last3Months':
+        start.setMonth(now.getMonth() - 3, 1)
+        break
+      case 'thisYear':
+        start.setMonth(0, 1)
+        break
+      default:
+        start.setDate(1)
     }
-  ]
+    
+    return {
+      start: start.toISOString().split('T')[0],
+      end: now.toISOString().split('T')[0]
+    }
+  }, [periodFilter])
+
+  // Use real data from the database with date filtering
+  const { payments, loading, error, createPayment } = usePayments(undefined, dateRange)
+
+
+  const handleMarkAsPaid = async (paymentId: string) => {
+    try {
+      // First check if the payment is rejected
+      const { data: payment } = await supabase
+        .from('payments')
+        .select('submission_status')
+        .eq('id', paymentId)
+        .single()
+
+      if (payment?.submission_status === 'rejected') {
+        alert('Cannot mark rejected payments as paid')
+        return
+      }
+
+      const { error } = await supabase
+        .from('payments')
+        .update({ 
+      status: 'completed',
+          paid_date: new Date().toISOString().split('T')[0]
+        })
+        .eq('id', paymentId)
+
+      if (error) throw error
+      
+      // Refresh payments list
+      window.location.reload() // Simple refresh for now
+    } catch (error) {
+      console.error('Error marking payment as paid:', error)
+    }
+  }
+
+  const handleSendReminder = async (paymentId: string) => {
+    try {
+      // For now, just show an alert. In a real app, this would send an email/SMS
+      alert(t('reminderSent'))
+    } catch (error) {
+      console.error('Error sending reminder:', error)
+    }
+  }
+
+  const handleTenantPaymentSubmission = async (paymentData: any) => {
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+
+      // Create payment with submission status
+      const { data, error } = await supabase
+        .from('payments')
+        .insert({
+          ...paymentData,
+          status: 'submitted',
+          submission_status: 'pending',
+          submitted_by: user.id,
+          submitted_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Send notification to admin
+      console.log('Payment submitted for review:', data)
+      
+      // Send email notifications
+      try {
+        const emailService = EmailService.getInstance()
+        
+        // Notify tenant
+        await emailService.sendPaymentSubmittedNotification(
+          'tenant@example.com', // TODO: Get actual tenant email
+          paymentData.tenant_name || 'Tenant',
+          paymentData.amount,
+          paymentData.currency || 'ARS',
+          paymentData.payment_date
+        )
+        
+        // Notify admin
+        const adminEmails = await emailService.getAdminEmails()
+        for (const adminEmail of adminEmails) {
+          await emailService.sendAdminNotification(
+            adminEmail,
+            paymentData.tenant_name || 'Tenant',
+            paymentData.amount,
+            paymentData.currency || 'ARS',
+            paymentData.payment_date
+          )
+        }
+      } catch (emailError) {
+        console.error('Error sending email notifications:', emailError)
+        // Don't fail the payment submission if email fails
+      }
+      
+      // Refresh payments list
+      window.location.reload()
+    } catch (error) {
+      console.error('Error submitting payment:', error)
+      throw error
+    }
+  }
+
+  const handlePaymentApproval = async (paymentId: string, status: 'approved' | 'rejected', notes?: string) => {
+    try {
+      // Get current user (admin)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+
+      const updateData: any = {
+        submission_status: status,
+        reviewed_by: user.id,
+        reviewed_at: new Date().toISOString(),
+        review_notes: notes
+      }
+
+      // If approved, mark as completed
+      if (status === 'approved') {
+        updateData.status = 'completed'
+        updateData.paid_date = new Date().toISOString().split('T')[0]
+      } else {
+        updateData.status = 'pending' // Reset to pending for retry
+      }
+
+      const { error } = await supabase
+        .from('payments')
+        .update(updateData)
+        .eq('id', paymentId)
+
+      if (error) throw error
+
+      // Send notification to tenant
+      console.log(`Payment ${status}:`, paymentId, notes)
+      
+      // Send email notifications
+      try {
+        const emailService = EmailService.getInstance()
+        
+        // Get payment details for email
+        const { data: paymentData } = await supabase
+          .from('payments')
+          .select('amount, currency, submitted_at, tenant_id')
+          .eq('id', paymentId)
+          .single()
+        
+        if (paymentData) {
+          const tenantEmail = await emailService.getTenantEmail(paymentData.tenant_id)
+          
+          if (tenantEmail) {
+            if (status === 'approved') {
+              await emailService.sendPaymentApprovedNotification(
+                tenantEmail,
+                'Tenant', // TODO: Get actual tenant name
+                paymentData.amount,
+                paymentData.currency || 'ARS',
+                paymentData.submitted_at
+              )
+            } else {
+              await emailService.sendPaymentRejectedNotification(
+                tenantEmail,
+                'Tenant', // TODO: Get actual tenant name
+                paymentData.amount,
+                paymentData.currency || 'ARS',
+                paymentData.submitted_at,
+                notes
+              )
+            }
+          }
+        }
+      } catch (emailError) {
+        console.error('Error sending email notifications:', emailError)
+        // Don't fail the approval if email fails
+      }
+      
+      // Refresh payments list
+      window.location.reload()
+    } catch (error) {
+      console.error('Error processing payment approval:', error)
+      throw error
+    }
+  }
 
   const paymentStats = [
     {
@@ -110,7 +255,7 @@ const Payments: React.FC = () => {
     },
     {
       title: t('collectionRate'),
-      value: `${Math.round((payments.filter(p => p.status === 'completed').length / payments.length) * 100)}%`,
+      value: payments.length > 0 ? `${Math.round((payments.filter(p => p.status === 'completed').length / payments.length) * 100)}%` : '0%',
       icon: ChartBarIcon,
       color: 'blue' as const,
     },
@@ -122,7 +267,17 @@ const Payments: React.FC = () => {
     },
   ]
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string, submissionStatus?: string) => {
+    // If it has a submission_status, use that for coloring
+    if (submissionStatus) {
+      switch (submissionStatus) {
+        case 'pending': return 'bg-blue-100 text-blue-800 border border-blue-200'
+        case 'approved': return 'bg-green-100 text-green-800 border border-green-200' // Shows as "completed"
+        case 'rejected': return 'bg-red-100 text-red-800 border border-red-200'
+        default: return 'bg-gray-100 text-gray-800 border border-gray-200'
+      }
+    }
+    
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800 border border-green-200'
       case 'pending': return 'bg-yellow-100 text-yellow-800 border border-yellow-200'
@@ -144,14 +299,43 @@ const Payments: React.FC = () => {
   }
 
   const filteredPayments = payments.filter(payment => {
-    const matchesSearch = payment.tenantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = payment.tenant_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          payment.apartment.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          payment.description.toLowerCase().includes(searchTerm.toLowerCase())
     
-    const matchesStatus = statusFilter === 'all' || payment.status === statusFilter
+    let matchesStatus = false
+    if (statusFilter === 'all') {
+      matchesStatus = true
+    } else if (statusFilter === 'submission_pending') {
+      matchesStatus = payment.submission_status === 'pending'
+    } else if (statusFilter === 'submission_approved') {
+      matchesStatus = payment.submission_status === 'approved'
+    } else if (statusFilter === 'submission_rejected') {
+      matchesStatus = payment.submission_status === 'rejected'
+    } else {
+      matchesStatus = payment.status === statusFilter
+    }
     
     return matchesSearch && matchesStatus
   })
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-red-600">Error loading payments: {error}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -172,7 +356,10 @@ const Payments: React.FC = () => {
             <option value="last3Months">{t('last3Months')}</option>
             <option value="thisYear">{t('thisYear')}</option>
           </select>
-          <button className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center space-x-2 transition-colors">
+          <button 
+            onClick={() => setShowTenantSubmission(true)}
+            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center space-x-2 transition-colors"
+          >
             <PlusIcon className="w-4 h-4" />
             <span>{t('recordPayment')}</span>
           </button>
@@ -202,7 +389,7 @@ const Payments: React.FC = () => {
               <BanknotesIcon className="w-6 h-6 text-green-600" />
             </div>
             <p className="text-2xl font-bold text-gray-900">
-              ${payments.filter(p => p.paymentType === 'rent' && p.status === 'completed').reduce((sum, p) => sum + p.amount, 0).toLocaleString()}
+              ${payments.filter(p => p.payment_type === 'rent' && p.status === 'completed').reduce((sum, p) => sum + p.amount, 0).toLocaleString()}
             </p>
             <p className="text-sm text-gray-600">{t('rentIncome')}</p>
           </div>
@@ -253,6 +440,9 @@ const Payments: React.FC = () => {
             <option value="pending">{t('pending')}</option>
             <option value="overdue">{t('overdue')}</option>
             <option value="failed">{t('failed')}</option>
+            <option value="submission_pending">{t('pending')} ({t('submitted')})</option>
+            <option value="submission_approved">{t('completed')} ({t('approved')})</option>
+            <option value="submission_rejected">{t('rejected')}</option>
           </select>
         </div>
       </div>
@@ -307,12 +497,12 @@ const Payments: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                         <span className="text-blue-600 font-medium">
-                          {payment.tenantName.split(' ').map(n => n[0]).join('')}
+                          {payment.tenant_name.split(' ').map(n => n[0]).join('')}
                         </span>
                       </div>
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {payment.tenantName}
+                          {payment.tenant_name}
                         </div>
                         <div className="text-sm text-gray-500">
                           {payment.apartment}
@@ -333,51 +523,78 @@ const Payments: React.FC = () => {
                       {payment.description}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {t(payment.paymentType)}
+                      {t(payment.payment_type)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-2">
                       <span className="text-lg">
-                        {getPaymentMethodIcon(payment.paymentMethod)}
+                        {getPaymentMethodIcon(payment.payment_method)}
                       </span>
                       <span className="text-sm text-gray-900">
-                        {t(payment.paymentMethod)}
+                        {t(payment.payment_method)}
                       </span>
                     </div>
-                    {payment.reference && (
+                    {payment.reference_number && (
                       <div className="text-xs text-gray-400">
-                        {payment.reference}
+                        {payment.reference_number}
                       </div>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(payment.status)}`}>
-                      {t(payment.status)}
+                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(payment.status, payment.submission_status)}`}>
+                      {payment.submission_status === 'pending' ? t('pending') : 
+                       payment.submission_status === 'approved' ? t('completed') :
+                       payment.submission_status === 'rejected' ? t('rejected') :
+                       t(payment.status)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {t('due')}: {new Date(payment.dueDate).toLocaleDateString('es-AR')}
+                      {t('due')}: {new Date(payment.due_date).toLocaleDateString('es-AR')}
                     </div>
-                    {payment.paidDate && (
+                    {payment.paid_date && (
                       <div className="text-sm text-gray-500">
-                        {t('paid')}: {new Date(payment.paidDate).toLocaleDateString('es-AR')}
+                        {t('paid')}: {new Date(payment.paid_date).toLocaleDateString('es-AR')}
                       </div>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900 transition-colors">
-                        {t('view')}
-                      </button>
-                      {payment.status === 'pending' && (
-                        <button className="text-green-600 hover:text-green-900 transition-colors">
+                      {payment.status === 'pending' && payment.submission_status !== 'rejected' && (
+                        <button 
+                          onClick={() => handleMarkAsPaid(payment.id)}
+                          className="text-green-600 hover:text-green-900 transition-colors"
+                        >
                           {t('markPaid')}
                         </button>
                       )}
+                      {/* Review button for pending and rejected payments */}
+                      {payment.submission_status === 'pending' || payment.submission_status === 'rejected' ? (
+                        <button 
+                          onClick={() => setSelectedPaymentForReview(payment)}
+                          className={`transition-colors ${
+                            payment.submission_status === 'rejected' 
+                              ? 'text-red-600 hover:text-red-900' 
+                              : 'text-green-600 hover:text-green-900'
+                          }`}
+                        >
+                          {t('review')}
+                        </button>
+                      ) : (
+                        /* View button for all other payments */
+                        <button 
+                          onClick={() => setSelectedPaymentForReview(payment)}
+                          className="text-blue-600 hover:text-blue-900 transition-colors"
+                        >
+                          {t('view')}
+                        </button>
+                      )}
                       {payment.status === 'overdue' && (
-                        <button className="text-red-600 hover:text-red-900 transition-colors">
+                        <button 
+                          onClick={() => handleSendReminder(payment.id)}
+                          className="text-red-600 hover:text-red-900 transition-colors"
+                        >
                           {t('sendReminder')}
                         </button>
                       )}
@@ -389,6 +606,28 @@ const Payments: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Payment Form Modal */}
+
+      {/* Tenant Payment Submission Modal */}
+      {showTenantSubmission && (
+        <TenantPaymentSubmission
+          onClose={() => setShowTenantSubmission(false)}
+          onSubmit={handleTenantPaymentSubmission}
+        />
+      )}
+
+      {/* Payment Approval Modal */}
+      {selectedPaymentForReview && (
+        <PaymentApprovalModal
+          payment={selectedPaymentForReview}
+          onClose={() => {
+            console.log('Closing payment approval modal')
+            setSelectedPaymentForReview(null)
+          }}
+          onApproval={handlePaymentApproval}
+        />
+      )}
     </div>
   )
 }

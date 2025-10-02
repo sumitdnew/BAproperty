@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import LanguageSwitcher from '../LanguageSwitcher';
+import { useNavigate } from 'react-router-dom';
+import Logo from '../Brand/Logo';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -10,6 +12,7 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignUpClick }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -68,7 +71,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignUpClick }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
       {/* Language Switcher - Top Right */}
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
@@ -77,20 +80,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignUpClick }) => {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center">
-            <svg
-              className="h-8 w-8 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-              />
-            </svg>
+          <div className="flex justify-center">
+            <Logo size="lg" pinColor="#FF385C" textColor="#1F2937" />
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
             {t('signIn')}
@@ -117,7 +108,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignUpClick }) => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors duration-200"
+                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm transition-colors duration-200"
                   placeholder={t('email')}
                 />
               </div>
@@ -137,7 +128,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignUpClick }) => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm transition-colors duration-200"
+                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm transition-colors duration-200"
                   placeholder={t('password')}
                 />
               </div>
@@ -174,7 +165,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignUpClick }) => {
               type="button"
               onClick={handleForgotPassword}
               disabled={loading}
-              className="text-sm text-blue-600 hover:text-blue-500 font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-sm text-red-500 hover:text-red-600 font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('forgotPassword')}
             </button>
@@ -185,7 +176,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignUpClick }) => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               {loading ? (
                 <div className="flex items-center">
@@ -217,16 +208,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignUpClick }) => {
           </div>
 
           {/* Sign Up Link */}
-          <div className="text-center">
+          <div className="text-center space-y-2">
             <p className="text-sm text-gray-600">
-              {t('dontHaveAccount')}{' '}
+              <strong>{t('propertyManagerAdmin')}</strong>{' '}
               <button
                 type="button"
-                onClick={onSignUpClick}
-                className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
+                onClick={() => navigate('/signup')}
+                className="font-medium text-red-500 hover:text-red-600 transition-colors duration-200"
               >
-                {t('signUp')}
+                {t('createAccount')}
               </button>
+            </p>
+            <p className="text-xs text-gray-500">
+              {t('tenantsMustUseInvite')}
             </p>
           </div>
         </form>

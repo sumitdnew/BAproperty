@@ -90,7 +90,7 @@ ba-property-manager/
 │   │   ├── Layout/
 │   │   │   ├── Header.tsx
 │   │   │   ├── Layout.tsx
-│   │   │   └── Sidebar.tsx
+
 │   │   ├── Modals/
 │   │   │   ├── NewMaintenanceRequestModal.tsx
 │   │   │   └── NewPaymentModal.tsx

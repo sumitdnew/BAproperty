@@ -2,6 +2,7 @@
 // hooks/useMaintenanceRequests.ts
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useBuildingContext } from '../context/BuildingContext'
 
 interface MaintenanceRequest {
   id: string
@@ -21,6 +22,7 @@ export const useMaintenanceRequests = (limit?: number) => {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { selectedBuildingId } = useBuildingContext()
 
   const fetchRequests = async () => {
     try {
@@ -42,6 +44,10 @@ export const useMaintenanceRequests = (limit?: number) => {
           completed_at
         `)
         .order('created_at', { ascending: false })
+
+      if (selectedBuildingId !== 'all') {
+        query = query.eq('building_id', selectedBuildingId)
+      }
 
       if (limit) {
         query = query.limit(limit)
@@ -120,7 +126,7 @@ export const useMaintenanceRequests = (limit?: number) => {
     return () => {
       subscription.unsubscribe()
     }
-  }, [limit])
+  }, [limit, selectedBuildingId])
 
   return {
     requests,

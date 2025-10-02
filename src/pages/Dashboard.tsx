@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
+import { useBuildingContext } from '../context/BuildingContext'
 import StatsCard from '../components/Dashboard/StatsCard'
 import { 
   HomeIcon, 
@@ -57,58 +58,95 @@ const Dashboard: React.FC = () => {
   const [isNewRequestModalOpen, setIsNewRequestModalOpen] = useState(false)
   const [isNewPaymentModalOpen, setIsNewPaymentModalOpen] = useState(false)
 
+  const { selectedBuildingId } = useBuildingContext()
+
   // Fetch dashboard statistics
   const fetchDashboardStats = async () => {
     try {
       setLoading(true)
       
       // Fetch apartment statistics
-      const { data: apartmentData, error: apartmentError } = await supabase
+      let apartmentQuery = supabase
         .from('apartments')
-        .select('id, is_occupied')
+        .select('id, is_occupied, unit_number')
+      if (selectedBuildingId !== 'all') {
+        apartmentQuery = apartmentQuery.eq('building_id', selectedBuildingId)
+      }
+      const { data: apartmentData, error: apartmentError } = await apartmentQuery
       
       if (apartmentError) throw apartmentError
 
       // Fetch maintenance requests count
-      const { data: maintenanceData, error: maintenanceError } = await supabase
+      // Prefer filtering maintenance by apartment_id to avoid unit_number collisions across buildings
+      let maintenanceBase = supabase
         .from('maintenance_requests')
-        .select('id')
+        .select('id, apartment, apartment_id, status')
         .in('status', ['pending', 'in_progress'])
+      let maintenanceData
+      let maintenanceError
+      if (selectedBuildingId !== 'all') {
+        const apartmentIds = (apartmentData || []).map((a: any) => a.id).filter(Boolean)
+        if (apartmentIds.length > 0) {
+          const res = await maintenanceBase.in('apartment_id', apartmentIds)
+          maintenanceData = res.data
+          maintenanceError = res.error
+        } else {
+          maintenanceData = []
+          maintenanceError = null
+        }
+      } else {
+        const res = await maintenanceBase
+        maintenanceData = res.data
+        maintenanceError = res.error
+      }
 
       if (maintenanceError) throw maintenanceError
 
       // Fetch active tenants count
-      const { data: tenantData, error: tenantError } = await supabase
+      let tenantQuery = supabase
         .from('tenants')
-        .select('id')
+        .select('id, apartments!inner ( building_id )')
         .eq('is_active', true)
+      if (selectedBuildingId !== 'all') {
+        tenantQuery = tenantQuery.eq('apartments.building_id', selectedBuildingId)
+      }
+      const { data: tenantData, error: tenantError } = await tenantQuery
 
       if (tenantError) throw tenantError
 
       // Fetch payments for this month
       const currentMonth = new Date().toISOString().substring(0, 7) // YYYY-MM format
-      const { data: paymentData, error: paymentError } = await supabase
+      let paymentQuery = supabase
         .from('payments')
-        .select('amount, status')
+        .select('amount, status, apartments!inner ( building_id )')
         .eq('status', 'completed')
         .gte('paid_date', `${currentMonth}-01`)
         .lt('paid_date', `${getNextMonth(currentMonth)}-01`)
+      if (selectedBuildingId !== 'all') {
+        paymentQuery = paymentQuery.eq('apartments.building_id', selectedBuildingId)
+      }
+      const { data: paymentData, error: paymentError } = await paymentQuery
 
       if (paymentError) throw paymentError
 
       // Fetch total completed payments
-      const { data: totalPaymentData, error: totalPaymentError } = await supabase
+      let totalPaymentQuery = supabase
         .from('payments')
-        .select('amount')
+        .select('amount, apartments!inner ( building_id )')
         .eq('status', 'completed')
+      if (selectedBuildingId !== 'all') {
+        totalPaymentQuery = totalPaymentQuery.eq('apartments.building_id', selectedBuildingId)
+      }
+      const { data: totalPaymentData, error: totalPaymentError } = await totalPaymentQuery
 
       if (totalPaymentError) throw totalPaymentError
 
       // Calculate statistics
       const totalApartments = apartmentData?.length || 0
-      const occupiedApartments = apartmentData?.filter(apt => apt.is_occupied).length || 0
       const totalRequests = maintenanceData?.length || 0
       const totalTenants = tenantData?.length || 0
+      // Count occupied apartments based on actual tenant data, not the is_occupied field
+      const occupiedApartments = totalTenants || 0
       const monthlyIncome = paymentData?.reduce((sum, payment) => sum + payment.amount, 0) || 0
       const totalIncome = totalPaymentData?.reduce((sum, payment) => sum + payment.amount, 0) || 0
 
@@ -130,13 +168,17 @@ const Dashboard: React.FC = () => {
   // Fetch recent maintenance requests
   const fetchRecentMaintenanceRequests = async () => {
     try {
+      // Determine unit numbers for the selected building (if any)
+      // no-op: we now filter by apartment_id below
+
       // Try to use the enhanced view first, fall back to simple table if not available
-      let { data, error } = await supabase
+      let baseViewQuery = supabase
         .from('maintenance_requests_with_tenant_info')
         .select(`
           id,
           title,
           apartment,
+          apartment_id,
           priority,
           status,
           estimated_cost,
@@ -147,14 +189,31 @@ const Dashboard: React.FC = () => {
         .order('created_at', { ascending: false })
         .limit(10)
 
+      let apartmentIdsForFilter: string[] = []
+      if (selectedBuildingId !== 'all') {
+        const { data: aptIdsRows } = await supabase
+          .from('apartments')
+          .select('id')
+          .eq('building_id', selectedBuildingId)
+        apartmentIdsForFilter = (aptIdsRows || []).map((r: any) => r.id)
+        if (apartmentIdsForFilter.length > 0) {
+          baseViewQuery = baseViewQuery.in('apartment_id', apartmentIdsForFilter)
+        } else {
+          baseViewQuery = baseViewQuery.limit(0)
+        }
+      }
+
+      let { data, error } = await baseViewQuery
+
       // If the view doesn't exist, fall back to the simple table
       if (error && error.code === 'PGRST116') {
-        const { data: simpleData, error: simpleError } = await supabase
+        let simpleQuery = supabase
           .from('maintenance_requests')
           .select(`
             id,
             title,
             apartment,
+            apartment_id,
             priority,
             status,
             estimated_cost,
@@ -163,6 +222,14 @@ const Dashboard: React.FC = () => {
           .in('status', ['pending', 'in_progress']) // Only show pending and in-progress requests
           .order('created_at', { ascending: false })
           .limit(5)
+        if (selectedBuildingId !== 'all') {
+          if (apartmentIdsForFilter.length > 0) {
+            simpleQuery = simpleQuery.in('apartment_id', apartmentIdsForFilter)
+          } else {
+            simpleQuery = simpleQuery.limit(0)
+          }
+        }
+        const { data: simpleData, error: simpleError } = await simpleQuery
         
         if (simpleError) throw simpleError
         // For fallback data, we need to ensure it has the right structure
@@ -244,7 +311,7 @@ const Dashboard: React.FC = () => {
       maintenanceSubscription.unsubscribe()
       paymentSubscription.unsubscribe()
     }
-  }, [])
+  }, [selectedBuildingId])
 
   // Utility functions
   const getPriorityColor = (priority: string) => {
@@ -284,7 +351,7 @@ const Dashboard: React.FC = () => {
       title: t('inviteTenant'),
       icon: UsersIcon,
       color: 'purple',
-      href: '/tenants'
+      href: '/invitations'
     },
     {
       title: t('generateReport'),
@@ -371,11 +438,11 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">
-          {t('welcomeTitle')}
+      <div className="rounded-lg p-6 bg-white border border-gray-200">
+        <h1 className="text-2xl font-bold mb-2 text-gray-900">
+          {t('welcomeTitle').replace('BA Property Manager', 'Barrio')}
         </h1>
-        <p className="text-blue-100">
+        <p className="text-gray-600">
           {t('welcomeSubtitle')}
         </p>
       </div>
@@ -388,7 +455,7 @@ const Dashboard: React.FC = () => {
             title={stat.title}
             value={stat.value}
             icon={stat.icon}
-            color={stat.color}
+            color={stat.color === 'green' ? 'rose' as any : stat.color}
             subtitle={stat.subtitle}
           />
         ))}
