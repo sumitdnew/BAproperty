@@ -179,6 +179,7 @@ const resources = {
       login: "Login",
       logout: "Logout",
       signUp: "Sign Up",
+      signIn: "Sign In",
       password: "Password",
       confirmPassword: "Confirm Password",
       forgotPassword: "Forgot Password?",
@@ -186,6 +187,12 @@ const resources = {
       dontHaveAccount: "Don't have an account?",
       alreadyHaveAccount: "Already have an account?",
       welcomeBack: "Welcome back",
+      propertyManagerAdmin: "Property Manager/Admin",
+      createAccount: "Create Account",
+      tenantsMustUseInvite: "Tenants must use an invitation link to sign up",
+      createAdminManagerAccount: "Create Admin/Manager Account",
+      managersSignupDescription: "Create an account to manage your properties and tenants",
+      alreadyHaveAccountSignIn: "Already have an account? Sign in",
       
       // Tenant Dashboard
       myPayments: "My Payments",
@@ -590,6 +597,7 @@ const resources = {
       login: "Iniciar Sesión",
       logout: "Cerrar Sesión",
       signUp: "Registrarse",
+      signIn: "Iniciar Sesión",
       password: "Contraseña",
       confirmPassword: "Confirmar Contraseña",
       forgotPassword: "¿Olvidaste tu contraseña?",
@@ -597,6 +605,12 @@ const resources = {
       dontHaveAccount: "¿No tienes una cuenta?",
       alreadyHaveAccount: "¿Ya tienes una cuenta?",
       welcomeBack: "Bienvenido de vuelta",
+      propertyManagerAdmin: "Administrador/Propietario",
+      createAccount: "Crear Cuenta",
+      tenantsMustUseInvite: "Los inquilinos deben usar un enlace de invitación para registrarse",
+      createAdminManagerAccount: "Crear Cuenta de Administrador/Propietario",
+      managersSignupDescription: "Crea una cuenta para gestionar tus propiedades e inquilinos",
+      alreadyHaveAccountSignIn: "¿Ya tienes una cuenta? Inicia sesión",
       
       // Tenant Dashboard
       myPayments: "Mis Pagos",
