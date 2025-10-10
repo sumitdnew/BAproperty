@@ -30,7 +30,6 @@ const Vendors: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
   
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -82,11 +81,8 @@ const Vendors: React.FC = () => {
                          vendor.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = categoryFilter === 'all' || vendor.category === categoryFilter;
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' && vendor.is_active) ||
-                         (statusFilter === 'inactive' && !vendor.is_active);
     
-    return matchesSearch && matchesCategory && matchesStatus;
+    return matchesSearch && matchesCategory;
   });
 
   // Get unique categories
@@ -203,7 +199,7 @@ const Vendors: React.FC = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {t('searchVendors')}
@@ -232,20 +228,6 @@ const Vendors: React.FC = () => {
               {categories.map(category => (
                 <option key={category} value={category}>{category}</option>
               ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('status')}
-            </label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              <option value="all">{t('allStatuses')}</option>
-              <option value="active">{t('active')}</option>
-              <option value="inactive">{t('inactive')}</option>
             </select>
           </div>
         </div>
@@ -353,16 +335,6 @@ const Vendors: React.FC = () => {
                         className="text-indigo-600 hover:text-indigo-900"
                       >
                         {t('edit')}
-                      </button>
-                      <button
-                        onClick={() => handleToggleStatus(vendor)}
-                        className={`${
-                          vendor.is_active 
-                            ? 'text-yellow-600 hover:text-yellow-900' 
-                            : 'text-green-600 hover:text-green-900'
-                        }`}
-                      >
-                        {vendor.is_active ? t('deactivate') : t('activate')}
                       </button>
                       <button
                         onClick={() => handleDeleteVendor(vendor.id)}

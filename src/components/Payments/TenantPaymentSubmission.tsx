@@ -18,6 +18,8 @@ const TenantPaymentSubmission: React.FC<TenantPaymentSubmissionProps> = ({ onClo
   })
   const [proofFile, setProofFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
   // Progress UI not implemented yet; remove to satisfy TS in CI
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,9 +79,15 @@ const TenantPaymentSubmission: React.FC<TenantPaymentSubmissionProps> = ({ onClo
       }
 
       await onSubmit(paymentData)
-      onClose()
+      setSuccessMessage(t('paymentSubmittedSuccessfully'))
+      
+      // Close modal after showing success message briefly
+      setTimeout(() => {
+        onClose()
+      }, 1500)
     } catch (error) {
       console.error('Error submitting payment:', error)
+      setErrorMessage(error instanceof Error ? error.message : t('errorSubmittingPayment'))
     } finally {
       setIsSubmitting(false)
     }
@@ -130,6 +138,26 @@ const TenantPaymentSubmission: React.FC<TenantPaymentSubmissionProps> = ({ onClo
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Success Message */}
+          {successMessage && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center space-x-3 animate-fade-in">
+              <svg className="w-6 h-6 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <p className="text-green-800 font-medium">{successMessage}</p>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
+              <svg className="w-6 h-6 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <p className="text-red-800 font-medium">{errorMessage}</p>
+            </div>
+          )}
+
           {/* Amount */}
           <div>
             <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
@@ -186,7 +214,7 @@ const TenantPaymentSubmission: React.FC<TenantPaymentSubmissionProps> = ({ onClo
           {/* Reference Number */}
           <div>
             <label htmlFor="reference_number" className="block text-sm font-medium text-gray-700 mb-2">
-              {t('referenceNumber')} *
+              {t('referenceNumber')}
             </label>
             <input
               type="text"
@@ -195,7 +223,6 @@ const TenantPaymentSubmission: React.FC<TenantPaymentSubmissionProps> = ({ onClo
               onChange={(e) => handleChange('reference_number', e.target.value)}
               placeholder="TR001234567"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              required
             />
           </div>
 
@@ -272,7 +299,7 @@ const TenantPaymentSubmission: React.FC<TenantPaymentSubmissionProps> = ({ onClo
             </button>
             <button
               type="submit"
-              disabled={!formData.amount || !formData.payment_date || !formData.reference_number || !proofFile || isSubmitting}
+              disabled={!formData.amount || !formData.payment_date || !proofFile || isSubmitting}
               onClick={() => console.log('Submit button clicked', { 
                 amount: formData.amount, 
                 payment_date: formData.payment_date, 

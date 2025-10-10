@@ -25,6 +25,7 @@ import TenantMainDashboard from './pages/TenantMainDashboard'
 import TenantMaintenance from './pages/TenantMaintenance'
 import AuthTest from './pages/AuthTest'
 import HomePage from './pages/HomePage'
+import Settings from './pages/Settings'
 import './lib/i18n'
 
 // rest of your code...
@@ -142,6 +143,7 @@ function App() {
               <Route path="/tenant-main-dashboard" element={<TenantMainDashboard />} />
               <Route path="/tenant-maintenance" element={<TenantMaintenance />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/auth-test" element={<AuthTest />} />
             </Routes>
           </Layout>

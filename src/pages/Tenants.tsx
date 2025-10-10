@@ -13,7 +13,6 @@ import {
   ExclamationTriangleIcon,
   ClockIcon
 } from '@heroicons/react/24/outline'
-import AddTenantModal from '../components/Tenants/AddTenantModal'
 import ViewTenantModal from '../components/Tenants/ViewTenantModal'
 import EditTenantModal from '../components/Tenants/EditTenantModal'
 import InviteTenantModal from '../components/Tenants/InviteTenantModalSimple'
@@ -53,7 +52,6 @@ const Tenants: React.FC = () => {
   })
   
   // Modal states
-  const [showAddTenantModal, setShowAddTenantModal] = useState(false)
   const [showInviteTenantModal, setShowInviteTenantModal] = useState(false)
   const [showViewTenantModal, setShowViewTenantModal] = useState(false)
   const [showEditTenantModal, setShowEditTenantModal] = useState(false)
@@ -232,10 +230,6 @@ const Tenants: React.FC = () => {
   })
 
   // Modal handlers
-  const handleAddTenant = () => {
-    setShowAddTenantModal(true)
-  }
-
   const handleInviteTenant = () => {
     setShowInviteTenantModal(true)
   }
@@ -314,13 +308,6 @@ const Tenants: React.FC = () => {
           >
             <EnvelopeIcon className="w-4 h-4" />
             <span>{t('inviteNewTenant')}</span>
-          </button>
-          <button 
-            onClick={handleAddTenant}
-            className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 flex items-center space-x-2 transition-colors"
-          >
-            <UserPlusIcon className="w-4 h-4" />
-            <span>{t('addTenant')}</span>
           </button>
         </div>
       </div>
@@ -561,12 +548,6 @@ const Tenants: React.FC = () => {
       </div>
 
       {/* Modals */}
-      <AddTenantModal
-        isOpen={showAddTenantModal}
-        onClose={() => setShowAddTenantModal(false)}
-        onSuccess={handleModalSuccess}
-      />
-
       <InviteTenantModal
         isOpen={showInviteTenantModal}
         onClose={() => setShowInviteTenantModal(false)}

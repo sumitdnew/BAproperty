@@ -112,23 +112,23 @@ const AddVendorModal: React.FC<AddVendorModalProps> = ({ isOpen, onClose, onSucc
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">{t('addNewVendor')}</h2>
+    <div className="modal-backdrop">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h2 className="text-xl font-bold text-gray-900">{t('addNewVendor')}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('vendorName')} *
+            <div className="form-group">
+              <label htmlFor="name" className="form-label form-label-required">
+                {t('vendorName')}
               </label>
               <input
                 type="text"
@@ -137,13 +137,13 @@ const AddVendorModal: React.FC<AddVendorModalProps> = ({ isOpen, onClose, onSucc
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="input-modern"
               />
             </div>
 
-            <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('category')} *
+            <div className="form-group">
+              <label htmlFor="category" className="form-label form-label-required">
+                {t('category')}
               </label>
               <select
                 id="category"
@@ -151,7 +151,7 @@ const AddVendorModal: React.FC<AddVendorModalProps> = ({ isOpen, onClose, onSucc
                 required
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="select-modern"
               >
                 <option value="">{t('selectCategory')}</option>
                 {categories.map(category => (
@@ -160,9 +160,9 @@ const AddVendorModal: React.FC<AddVendorModalProps> = ({ isOpen, onClose, onSucc
               </select>
             </div>
 
-            <div>
-              <label htmlFor="contact_person" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('contactPerson')} *
+            <div className="form-group">
+              <label htmlFor="contact_person" className="form-label form-label-required">
+                {t('contactPerson')}
               </label>
               <input
                 type="text"
@@ -171,42 +171,40 @@ const AddVendorModal: React.FC<AddVendorModalProps> = ({ isOpen, onClose, onSucc
                 required
                 value={formData.contact_person}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="input-modern"
               />
             </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('email')} *
+            <div className="form-group">
+              <label htmlFor="email" className="form-label">
+                {t('email')}
               </label>
               <input
                 type="email"
                 id="email"
                 name="email"
-                required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="input-modern"
               />
             </div>
 
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('phone')} *
+            <div className="form-group">
+              <label htmlFor="phone" className="form-label">
+                {t('phone')}
               </label>
               <input
                 type="tel"
                 id="phone"
                 name="phone"
-                required
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="input-modern"
               />
             </div>
 
-            <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="form-group">
+              <label htmlFor="address" className="form-label">
                 {t('address')}
               </label>
               <input
@@ -215,13 +213,13 @@ const AddVendorModal: React.FC<AddVendorModalProps> = ({ isOpen, onClose, onSucc
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="input-modern"
               />
             </div>
           </div>
 
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="form-group">
+            <label htmlFor="description" className="form-label">
               {t('description')}
             </label>
             <textarea
@@ -230,17 +228,17 @@ const AddVendorModal: React.FC<AddVendorModalProps> = ({ isOpen, onClose, onSucc
               rows={3}
               value={formData.description}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="input-modern"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="form-group">
+            <label className="form-label">
               {t('assignedBuildings')}
             </label>
-            <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
+            <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-3 bg-gray-50">
               {buildings.map((building) => (
-                <div key={building.id} className="flex items-center">
+                <div key={building.id} className="flex items-center py-2">
                   <input
                     type="checkbox"
                     id={`building-${building.id}`}
@@ -254,41 +252,29 @@ const AddVendorModal: React.FC<AddVendorModalProps> = ({ isOpen, onClose, onSucc
                     }}
                     className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
                   />
-                  <label htmlFor={`building-${building.id}`} className="ml-2 block text-sm text-gray-900">
+                  <label htmlFor={`building-${building.id}`} className="ml-3 block text-sm text-gray-900 font-medium">
                     {building.name}
                   </label>
                 </div>
               ))}
             </div>
-            <p className="text-xs text-gray-500 mt-1">{t('selectBuildingsForVendor')}</p>
+            <p className="form-hint">{t('selectBuildingsForVendor')}</p>
           </div>
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="is_active"
-              name="is_active"
-              checked={formData.is_active}
-              onChange={handleChange}
-              className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-            />
-            <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900">
-              {t('activeVendor')}
-            </label>
-          </div>
+          <div className="divider"></div>
 
-          <div className="flex justify-end space-x-3">
+          <div className="actions-row">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              className="btn-secondary"
             >
               {t('cancel')}
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-500 border border-transparent rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+              className="btn-primary"
             >
               {loading ? t('creating') : t('createVendor')}
             </button>

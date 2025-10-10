@@ -241,7 +241,7 @@ const EditApartmentModal: React.FC<EditApartmentModalProps> = ({ isOpen, onClose
 
               <div>
                 <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('bedrooms')} *
+                  {t('bedrooms')}
                 </label>
                 <input
                   type="number"
@@ -249,15 +249,14 @@ const EditApartmentModal: React.FC<EditApartmentModalProps> = ({ isOpen, onClose
                   name="bedrooms"
                   value={formData.bedrooms}
                   onChange={handleInputChange}
-                  required
-                  min="1"
+                  min="0"
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
                 <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('bathrooms')} *
+                  {t('bathrooms')}
                 </label>
                 <input
                   type="number"
@@ -265,8 +264,7 @@ const EditApartmentModal: React.FC<EditApartmentModalProps> = ({ isOpen, onClose
                   name="bathrooms"
                   value={formData.bathrooms}
                   onChange={handleInputChange}
-                  required
-                  min="1"
+                  min="0"
                   step="0.5"
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -290,7 +288,7 @@ const EditApartmentModal: React.FC<EditApartmentModalProps> = ({ isOpen, onClose
 
               <div>
                 <label htmlFor="monthly_rent" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('monthlyRent')} *
+                  {t('monthlyExpense')} *
                 </label>
                 <input
                   type="number"

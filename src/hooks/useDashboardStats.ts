@@ -75,7 +75,7 @@ export const useDashboardStats = () => {
       const monthlyPaymentRes = await monthlyPaymentQuery
 
       let totalPaymentQuery = supabase
-        .from('payments')
+         .from('payments')
         .select('amount, apartments!inner ( building_id )')
         .eq('status', 'completed')
       if (selectedBuildingId !== 'all') {

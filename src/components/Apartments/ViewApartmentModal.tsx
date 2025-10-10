@@ -168,7 +168,7 @@ const ViewApartmentModal: React.FC<ViewApartmentModalProps> = ({ isOpen, onClose
               <div className="flex items-center">
                 <BuildingOfficeIcon className="w-8 h-8 text-green-600 mr-3" />
                 <div>
-                  <p className="text-sm font-medium text-green-600">{t('monthlyRent')}</p>
+                  <p className="text-sm font-medium text-green-600">{t('monthlyExpense')}</p>
                   <p className="text-lg font-semibold text-green-900">
                     ${apartment.monthly_rent.toLocaleString()}
                   </p>

@@ -356,7 +356,7 @@ const ViewTenantModal: React.FC<ViewTenantModalProps> = ({ isOpen, onClose, tena
             <h3 className="text-lg font-medium text-gray-900 mb-4">{t('leaseInformation')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600">{t('monthlyRent')}</label>
+                <label className="block text-sm font-medium text-gray-600">{t('monthlyExpense')}</label>
                 <p className="text-lg font-semibold text-gray-900 mt-1">
                   ${tenant.monthly_rent.toLocaleString()} ARS
                 </p>

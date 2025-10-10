@@ -17,52 +17,52 @@ const StatsCard: React.FC<StatsCardProps> = ({
 }) => {
   const colorVariants = {
     blue: {
+      gradient: 'from-blue-500 to-cyan-500',
       iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600',
-      border: 'border-blue-200'
+      iconColor: 'text-blue-600'
     },
     green: {
+      gradient: 'from-green-500 to-emerald-500',
       iconBg: 'bg-green-100',
-      iconColor: 'text-green-600',
-      border: 'border-green-200'
+      iconColor: 'text-green-600'
     },
     yellow: {
+      gradient: 'from-yellow-500 to-orange-500',
       iconBg: 'bg-yellow-100',
-      iconColor: 'text-yellow-600',
-      border: 'border-yellow-200'
+      iconColor: 'text-yellow-600'
     },
     red: {
+      gradient: 'from-red-500 to-pink-500',
       iconBg: 'bg-red-100',
-      iconColor: 'text-red-600',
-      border: 'border-red-200'
+      iconColor: 'text-red-600'
     },
     rose: {
-      iconBg: 'bg-rose-100',
-      iconColor: 'text-rose-600',
-      border: 'border-rose-200'
+      gradient: 'from-pink-500 to-rose-500',
+      iconBg: 'bg-pink-100',
+      iconColor: 'text-pink-600'
     },
     orange: {
+      gradient: 'from-orange-500 to-red-500',
       iconBg: 'bg-orange-100',
-      iconColor: 'text-orange-600',
-      border: 'border-orange-200'
+      iconColor: 'text-orange-600'
     }
   };
 
   const currentColor = colorVariants[color];
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border ${currentColor.border} p-6 hover:shadow-md transition-shadow duration-200`}>
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {subtitle && (
-            <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
-          )}
+    <div className="stat-card group animate-fade-in">
+      <div className="flex items-center justify-between mb-4">
+        <div className={`icon-container-gradient bg-gradient-to-br ${currentColor.gradient}`}>
+          <Icon className="w-7 h-7 text-white" />
         </div>
-        <div className={`${currentColor.iconBg} ${currentColor.iconColor} p-3 rounded-full`}>
-          <Icon className="w-6 h-6" />
-        </div>
+        {subtitle && (
+          <span className="text-sm text-gray-500">{subtitle}</span>
+        )}
+      </div>
+      <div>
+        <p className="text-sm font-medium text-gray-600 mb-2">{title}</p>
+        <p className="text-3xl font-bold text-gray-900">{value}</p>
       </div>
     </div>
   );

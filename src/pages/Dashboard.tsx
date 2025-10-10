@@ -393,20 +393,21 @@ const Dashboard: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-white">
+      <div className="space-y-6 animate-fade-in">
+        <div className="card-modern bg-gradient-to-br from-white to-red-50/30 p-8">
           <div className="animate-pulse">
-            <div className="h-6 bg-blue-500 rounded w-3/4 mb-2"></div>
-            <div className="h-4 bg-blue-500 rounded w-1/2"></div>
+            <div className="h-8 bg-gray-200 rounded w-3/4 mb-3"></div>
+            <div className="h-5 bg-gray-200 rounded w-1/2"></div>
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div key={i} className="card-modern p-6">
               <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+                <div className="w-14 h-14 bg-gray-200 rounded-2xl mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+                <div className="h-8 bg-gray-200 rounded w-2/3"></div>
               </div>
             </div>
           ))}
@@ -436,15 +437,19 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Welcome Section */}
-      <div className="rounded-lg p-6 bg-white border border-gray-200">
-        <h1 className="text-2xl font-bold mb-2 text-gray-900">
-          {t('welcomeTitle').replace('BA Property Manager', 'Barrio')}
-        </h1>
-        <p className="text-gray-600">
-          {t('welcomeSubtitle')}
-        </p>
+      <div className="card-modern p-8 bg-gradient-to-br from-white to-red-50/30 hover-lift">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-gradient-primary text-3xl font-bold mb-2">
+              {t('welcomeTitle').replace('BA Property Manager', 'Barrio')}
+            </h1>
+            <p className="text-gray-600 text-lg">
+              {t('welcomeSubtitle')}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -464,44 +469,46 @@ const Dashboard: React.FC = () => {
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Maintenance Requests */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
+        <div className="card-modern hover-lift">
+          <div className="p-6 border-b border-gray-100">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-xl font-bold text-gray-900">
                 {t('maintenanceSummary')}
               </h3>
               <a 
                 href="/maintenance" 
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                className="text-red-500 hover:text-red-600 text-sm font-semibold transition-colors"
               >
-                {t('viewAll')}
+                {t('viewAll')} →
               </a>
             </div>
           </div>
           <div className="p-6">
             {recentMaintenanceRequests.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {recentMaintenanceRequests.map((request) => (
-                  <div key={request.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{request.title}</h4>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {t('apartment')}: {request.apartment} • {request.tenant_name}
-                      </p>
-                      <div className="flex items-center space-x-2 mt-2">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(request.priority)}`}>
-                          {t(request.priority)}
-                        </span>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(request.status)}`}>
-                          {t(request.status)}
-                        </span>
+                  <div key={request.id} className="card-flat p-4 hover-lift cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900">{request.title}</h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {t('apartment')}: {request.apartment} • {request.tenant_name}
+                        </p>
+                        <div className="flex items-center space-x-2 mt-2">
+                          <span className={`badge-modern ${getPriorityColor(request.priority)}`}>
+                            {t(request.priority)}
+                          </span>
+                          <span className={`badge-modern ${getStatusColor(request.status)}`}>
+                            {t(request.status)}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right ml-4">
-                      <p className="font-semibold text-gray-900">
-                        ${request.estimated_cost.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-gray-500">{t('estimatedCost')}</p>
+                      <div className="text-right ml-4">
+                        <p className="font-bold text-gray-900 text-lg">
+                          ${request.estimated_cost.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-gray-500">{t('estimatedCost')}</p>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -516,66 +523,76 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
+        <div className="card-modern hover-lift">
+          <div className="p-6 border-b border-gray-100">
+            <h3 className="text-xl font-bold text-gray-900">
               {t('quickActions')}
             </h3>
           </div>
           <div className="p-6">
             <div className="grid grid-cols-2 gap-4">
-              {quickActions.map((action, index) => (
-                <button 
-                  key={index}
-                  className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-center group"
-                  onClick={() => {
-                    if (action.onClick) {
-                      action.onClick()
-                    } else if (action.href) {
-                      window.location.href = action.href
-                    }
-                  }}
-                >
-                  <action.icon className="w-8 h-8 text-gray-400 group-hover:text-blue-500 mx-auto mb-2 transition-colors" />
-                  <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                    {action.title}
-                  </span>
-                </button>
-              ))}
+              {quickActions.map((action, index) => {
+                const gradients = [
+                  'from-blue-500 to-cyan-500',
+                  'from-green-500 to-emerald-500',
+                  'from-purple-500 to-pink-500',
+                  'from-orange-500 to-red-500'
+                ];
+                return (
+                  <button 
+                    key={index}
+                    className="group p-6 bg-white rounded-2xl border border-gray-200 hover:border-transparent hover:shadow-modern-lg transition-all duration-300 text-center hover-lift"
+                    onClick={() => {
+                      if (action.onClick) {
+                        action.onClick()
+                      } else if (action.href) {
+                        window.location.href = action.href
+                      }
+                    }}
+                  >
+                    <div className={`icon-container-gradient bg-gradient-to-br ${gradients[index]} mx-auto mb-4`}>
+                      <action.icon className="w-7 h-7 text-white" />
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {action.title}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
       </div>
 
       {/* Building Overview */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">
+      <div className="card-modern hover-lift">
+        <div className="p-6 border-b border-gray-100">
+          <h3 className="text-xl font-bold text-gray-900">
             {t('buildingOverview')}
           </h3>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-3">
-                <HomeIcon className="w-6 h-6 text-blue-600" />
+            <div className="text-center group cursor-pointer">
+              <div className="icon-container-gradient bg-gradient-to-br from-blue-500 to-cyan-500 mx-auto mb-4">
+                <HomeIcon className="w-6 h-6 text-white" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalApartments}</p>
-              <p className="text-sm text-gray-600">{t('totalApartments')}</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.totalApartments}</p>
+              <p className="text-sm text-gray-600 mt-2">{t('totalApartments')}</p>
             </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mx-auto mb-3">
-                <CheckCircleIcon className="w-6 h-6 text-green-600" />
+            <div className="text-center group cursor-pointer">
+              <div className="icon-container-gradient bg-gradient-to-br from-green-500 to-emerald-500 mx-auto mb-4">
+                <CheckCircleIcon className="w-6 h-6 text-white" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">{stats.occupiedApartments}</p>
-              <p className="text-sm text-gray-600">{t('occupied')}</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.occupiedApartments}</p>
+              <p className="text-sm text-gray-600 mt-2">{t('occupied')}</p>
             </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg mx-auto mb-3">
-                <ClockIcon className="w-6 h-6 text-yellow-600" />
+            <div className="text-center group cursor-pointer">
+              <div className="icon-container-gradient bg-gradient-to-br from-yellow-500 to-orange-500 mx-auto mb-4">
+                <ClockIcon className="w-6 h-6 text-white" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalApartments - stats.occupiedApartments}</p>
-              <p className="text-sm text-gray-600">{t('available')}</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.totalApartments - stats.occupiedApartments}</p>
+              <p className="text-sm text-gray-600 mt-2">{t('available')}</p>
             </div>
           </div>
         </div>

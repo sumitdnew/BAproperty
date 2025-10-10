@@ -18,7 +18,8 @@ import {
   Bars3Icon,
   XMarkIcon,
   ArrowRightOnRectangleIcon,
-  BuildingOfficeIcon
+  BuildingOfficeIcon,
+  Cog6ToothIcon
 } from '@heroicons/react/24/outline'
 
 interface HeaderProps {
@@ -64,12 +65,13 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
     { name: t('maintenance'), href: '/maintenance', icon: WrenchScrewdriverIcon },
     { name: t('community'), href: '/community', icon: UserGroupIcon },
     { name: t('analytics'), href: '/analytics', icon: ChartBarIcon },
+    { name: t('settings'), href: '/settings', icon: Cog6ToothIcon },
   ]
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="glass sticky top-0 z-40 border-b border-white/30 shadow-modern">
       {/* Top bar with logo and user info */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-white">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3">
         <div className="flex items-center">
           <div className="mr-2 -ml-1 flex items-center">
             <Logo size="md" pinColor="#FF385C" textColor="#111827" />
@@ -83,7 +85,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
               <select
                 value={selectedBuildingId}
                 onChange={(e) => setSelectedBuildingId(e.target.value as any)}
-                className="bg-white text-gray-700 border border-blue-200 rounded-md px-2 py-1 text-sm"
+                className="select-modern text-sm py-2"
                 disabled={loading}
               >
                 <option value="all">{t('all')}</option>
@@ -95,9 +97,9 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
           )}
           <LanguageSwitcher />
           
-          <button className="relative p-2 text-gray-600 hover:text-gray-800 transition-colors">
+          <button className="relative p-2 text-gray-600 hover:text-red-500 transition-colors hover:bg-red-50 rounded-lg">
             <BellIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span className="absolute top-0 right-0 w-2 h-2 bg-red-400 rounded-full"></span>
+            <span className="absolute top-1 right-1 w-2 h-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full animate-pulse"></span>
           </button>
 
           {/* Mobile menu button */}
@@ -124,7 +126,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
             <UserCircleIcon className="w-8 h-8 text-gray-600" />
             <button
               onClick={handleLogout}
-              className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
+              className="p-2 text-gray-600 hover:text-red-500 transition-colors hover:bg-red-50 rounded-lg"
               title={t('logout')}
             >
               <ArrowRightOnRectangleIcon className="w-5 h-5" />
@@ -134,17 +136,17 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
       </div>
 
       {/* Navigation bar - Desktop */}
-      <nav className="hidden sm:block px-6 py-2 bg-white">
+      <nav className="hidden sm:block px-6 py-2 border-t border-gray-100/50">
         <div className="flex items-center space-x-1">
           {navigationItems.map((item) => (
             <NavLink
               key={item.name}
               to={item.href}
               className={({ isActive }) =>
-                `flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                `flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
                   isActive
-                    ? 'bg-blue-100 text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-md'
+                    : 'text-gray-600 hover:bg-red-50 hover:text-red-600'
                 }`
               }
             >
@@ -157,7 +159,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
 
       {/* Mobile navigation menu */}
       {mobileMenuOpen && (
-        <nav className="sm:hidden bg-white border-t border-gray-200">
+        <nav className="sm:hidden border-t border-gray-200 animate-slide-up">
           <div className="px-4 py-2 space-y-1">
             {navigationItems.map((item) => (
               <NavLink
@@ -165,10 +167,10 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                 to={item.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                  `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                     isActive
-                      ? 'bg-blue-100 text-blue-600 border-l-4 border-blue-600'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-md'
+                      : 'text-gray-600 hover:bg-red-50 hover:text-red-600'
                   }`
                 }
               >
@@ -198,7 +200,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                   <select
                     value={selectedBuildingId}
                     onChange={(e) => setSelectedBuildingId(e.target.value as any)}
-                    className="bg-white text-gray-700 border border-gray-300 rounded-md px-2 py-2 text-sm"
+                    className="select-modern text-sm py-2"
                     disabled={loading}
                   >
                     <option value="all">{t('all')}</option>

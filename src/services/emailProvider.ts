@@ -207,26 +207,64 @@ export class EmailProvider {
         blockHeadless: true
       })
 
+      // Get current language setting to determine template
+      let templateId = 'template_ln74jmx' // Default to English template
+      let currentLanguage = 'en'
+      
+      try {
+        // Import supabase dynamically to avoid circular dependencies
+        const { supabase } = await import('../lib/supabase')
+        
+        // Fetch current language setting
+        const { data: langData } = await supabase
+          .from('app_settings')
+          .select('setting_value')
+          .eq('setting_key', 'default_language')
+          .single()
+        
+        if (langData) {
+          currentLanguage = langData.setting_value
+        }
+        
+        // Fetch appropriate template based on language
+        const templateKey = `email_template_${currentLanguage}`
+        const { data: templateData } = await supabase
+          .from('app_settings')
+          .select('setting_value')
+          .eq('setting_key', templateKey)
+          .single()
+        
+        if (templateData) {
+          templateId = templateData.setting_value
+          console.log(`📧 Using ${currentLanguage.toUpperCase()} template:`, templateId)
+        }
+      } catch (error) {
+        console.warn('Could not fetch template from settings, using default:', error)
+      }
+
       // Prepare email parameters
       const emailParams = {
         to_email: to,
         first_name: invitationData?.firstName || 'Tenant',
         last_name: invitationData?.lastName || 'Name',
+        user_email: to,
         message: invitationData?.message || '',
         building_name: invitationData?.buildingName || 'Building Name',
         apartment_unit: invitationData?.apartmentUnit || 'Apartment Unit',
         temp_password: invitationData?.tempPassword || 'TempPassword123!',
-        login_url: `${window.location.origin}/login`
+        login_url: `${window.location.origin}/login`,
+        signup_url: `${window.location.origin}/invite?email=${encodeURIComponent(to)}`
       }
       
       console.log('📧 Sending EmailJS request with params:', emailParams)
       console.log('📧 Service ID:', 'service_7n6g698')
-      console.log('📧 Template ID:', 'template_ln74jmx')
+      console.log('📧 Template ID:', templateId)
+      console.log('📧 Language:', currentLanguage)
       
       // Send email using proper EmailJS API with private key
       const result = await window.emailjs.send(
         'service_7n6g698', // Your actual EmailJS Service ID
-        'template_ln74jmx', // Your actual EmailJS Template ID
+        templateId, // Dynamic template ID based on language
         emailParams,
         {
           publicKey: emailjsPublicKey,

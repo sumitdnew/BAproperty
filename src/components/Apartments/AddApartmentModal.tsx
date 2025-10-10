@@ -17,20 +17,32 @@ interface Building {
   city: string
 }
 
+interface ApartmentFormData {
+  building_id: string
+  unit_number: string
+  floor: number | ''
+  bedrooms: number | ''
+  bathrooms: number | ''
+  square_meters: number | ''
+  monthly_rent: number | ''
+  monthly_expenses: number | ''
+}
+
 const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [buildings, setBuildings] = useState<Building[]>([])
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ApartmentFormData>({
     building_id: '',
     unit_number: '',
     floor: 1,
-    bedrooms: 1,
-    bathrooms: 1,
-    square_meters: 0,
-    monthly_rent: 0
+    bedrooms: '',
+    bathrooms: '',
+    square_meters: '',
+    monthly_rent: '',
+    monthly_expenses: ''
   })
 
   useEffect(() => {
@@ -58,7 +70,7 @@ const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ isOpen, onClose, 
     const { name, value, type } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : value
+      [name]: type === 'number' ? (value === '' ? '' : Number(value)) : value
     }))
   }
 
@@ -74,11 +86,12 @@ const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ isOpen, onClose, 
         .insert({
           building_id: formData.building_id,
           unit_number: formData.unit_number,
-          floor: formData.floor,
-          bedrooms: formData.bedrooms,
-          bathrooms: formData.bathrooms,
-          square_meters: formData.square_meters,
-          monthly_rent: formData.monthly_rent
+          floor: typeof formData.floor === 'number' ? formData.floor : Number(formData.floor || 0),
+          bedrooms: typeof formData.bedrooms === 'number' ? formData.bedrooms : Number(formData.bedrooms || 0),
+          bathrooms: typeof formData.bathrooms === 'number' ? formData.bathrooms : Number(formData.bathrooms || 0),
+          square_meters: formData.square_meters === '' ? 0 : Number(formData.square_meters),
+          monthly_rent: typeof formData.monthly_rent === 'number' ? formData.monthly_rent : Number(formData.monthly_rent || 0),
+          monthly_expenses: typeof formData.monthly_expenses === 'number' ? formData.monthly_expenses : Number(formData.monthly_expenses || 0)
         })
 
       if (insertError) throw insertError
@@ -88,10 +101,11 @@ const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ isOpen, onClose, 
         building_id: '',
         unit_number: '',
         floor: 1,
-        bedrooms: 1,
-        bathrooms: 1,
-        square_meters: 0,
-        monthly_rent: 0
+        bedrooms: '',
+        bathrooms: '',
+        square_meters: '',
+        monthly_rent: '',
+        monthly_expenses: ''
       })
 
       onSuccess()
@@ -192,7 +206,7 @@ const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ isOpen, onClose, 
 
               <div>
                 <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('bedrooms')} *
+                  {t('bedrooms')}
                 </label>
                 <input
                   type="number"
@@ -200,15 +214,14 @@ const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ isOpen, onClose, 
                   name="bedrooms"
                   value={formData.bedrooms}
                   onChange={handleInputChange}
-                  required
-                  min="1"
+                  min="0"
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
                 <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('bathrooms')} *
+                  {t('bathrooms')}
                 </label>
                 <input
                   type="number"
@@ -216,8 +229,7 @@ const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ isOpen, onClose, 
                   name="bathrooms"
                   value={formData.bathrooms}
                   onChange={handleInputChange}
-                  required
-                  min="1"
+                  min="0"
                   step="0.5"
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -241,7 +253,7 @@ const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ isOpen, onClose, 
 
               <div>
                 <label htmlFor="monthly_rent" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('monthlyRent')} *
+                  {t('monthlyRent')}
                 </label>
                 <input
                   type="number"
@@ -249,7 +261,22 @@ const AddApartmentModal: React.FC<AddApartmentModalProps> = ({ isOpen, onClose, 
                   name="monthly_rent"
                   value={formData.monthly_rent}
                   onChange={handleInputChange}
-                  required
+                  min="0"
+                  step="0.01"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="monthly_expenses" className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('monthlyExpenses')}
+                </label>
+                <input
+                  type="number"
+                  id="monthly_expenses"
+                  name="monthly_expenses"
+                  value={formData.monthly_expenses}
+                  onChange={handleInputChange}
                   min="0"
                   step="0.01"
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
