@@ -54,30 +54,26 @@ export const BuildingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           name: tenantData.apartments[0].buildings[0].name
         }]
       } else {
-        // User is not a tenant, check admin access or load all buildings
+        // User is not a tenant, check admin access
         const { data: accessData, error: accessError } = await supabase
           .from('admin_building_access')
           .select('building_id, buildings ( id, name )')
           .eq('admin_id', userId)
 
-
-        if (accessData && accessData.length > 0) {
+        if (accessError) {
+          console.error('Error loading admin building access:', accessError)
+          // Don't load any buildings if there's an RLS error
+          // This prevents showing all buildings when access should be restricted
+          setError('Unable to load building access. Please contact administrator.')
+          mapped = []
+        } else if (accessData && accessData.length > 0) {
           // User has admin access to specific buildings
           mapped = accessData
             .map((row: any) => ({ id: row.buildings?.id || row.building_id, name: row.buildings?.name || 'Building' }))
             .filter((b: AccessibleBuilding) => Boolean(b.id))
         } else {
-          // Fallback: load all buildings (for admins/managers without specific access)
-          const { data: allBuildings, error: buildingsError } = await supabase
-            .from('buildings')
-            .select('id, name')
-            .limit(10)
-
-          if (buildingsError) {
-            console.error('Error loading all buildings:', buildingsError)
-          } else {
-            mapped = allBuildings || []
-          }
+          // User has no building access records - no buildings to show
+          mapped = []
         }
       }
 
