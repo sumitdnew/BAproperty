@@ -43,6 +43,12 @@ export const usePayments = (limit?: number, dateRange?: { start: string; end: st
       setLoading(true)
       setError(null)
 
+      if (selectedBuildingId === 'none') {
+        // User has no building access - show empty data
+        setPayments([])
+        return
+      }
+
       // First, get apartment IDs for the selected building if not 'all'
       let apartmentIds: string[] = []
       if (selectedBuildingId !== 'all') {

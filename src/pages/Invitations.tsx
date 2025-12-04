@@ -49,6 +49,13 @@ const Invitations: React.FC = () => {
     try {
       setLoading(true)
       setError(null)
+      
+      if (selectedBuildingId === 'none') {
+        // User has no building access - show empty data
+        setRows([])
+        return
+      }
+      
       let query = supabase
         .from('invitations')
         .select(`
@@ -202,11 +209,45 @@ const Invitations: React.FC = () => {
   const resendInvitation = async (invitation: InvitationRow) => {
     try {
       setResendingId(invitation.id)
-      // Prepare EmailJS params similar to invite modal
+      
+      // Fetch language setting from app_settings
+      const { data: languageSetting, error: langError } = await supabase
+        .from('app_settings')
+        .select('setting_value')
+        .eq('setting_key', 'default_language')
+        .maybeSingle()
+      
+      if (langError) {
+        console.error('❌ Error fetching language setting:', langError)
+      }
+      
+      const defaultLanguage = languageSetting?.setting_value || 'es'
+      console.log(`🌐 Default language from settings: ${defaultLanguage}`)
+      
+      // Fetch template IDs from app_settings
+      const templateKey = defaultLanguage === 'es' ? 'spanish_email_template_id' : 'english_email_template_id'
+      const { data: templateSetting, error: templateError } = await supabase
+        .from('app_settings')
+        .select('setting_value')
+        .eq('setting_key', templateKey)
+        .maybeSingle()
+      
+      if (templateError) {
+        console.error(`❌ Error fetching ${templateKey}:`, templateError)
+      }
+      
+      // Prepare EmailJS params
       const envKey = (import.meta as any).env?.VITE_EMAILJS_USER_ID
       const emailjsPublicKey = envKey === 'E0G-u44Ys9PBcy6gP' ? '2eD5KJ_H_t0llmv08' : envKey
       const serviceId = 'service_7n6g698'
-      const templateId = 'template_ln74jmx'
+      
+      // Use the template from settings, or fall back to English template
+      const templateId = templateSetting?.setting_value || 'template_ln74jmx'
+      
+      console.log(`📧 Language: ${defaultLanguage}`)
+      console.log(`📧 Template key: ${templateKey}`)
+      console.log(`📧 Template ID from DB: ${templateSetting?.setting_value}`)
+      console.log(`📧 Final Template ID: ${templateId}`)
 
       const params: Record<string, any> = {
         user_name: `${invitation.first_name || ''} ${invitation.last_name || ''}`.trim() || invitation.email,
@@ -219,6 +260,7 @@ const Invitations: React.FC = () => {
         message: invitation.message || ''
       }
 
+      console.log(`📧 Resending invitation in ${defaultLanguage} using template ${templateId}`)
       await emailjs.send(serviceId, templateId, params, { publicKey: emailjsPublicKey })
 
       // Extend expiration by 7 days and keep status as sent (or accepted stays accepted)

@@ -66,78 +66,126 @@ const Dashboard: React.FC = () => {
       setLoading(true)
       
       // Fetch apartment statistics
-      let apartmentQuery = supabase
-        .from('apartments')
-        .select('id, is_occupied, unit_number')
-      if (selectedBuildingId !== 'all') {
-        apartmentQuery = apartmentQuery.eq('building_id', selectedBuildingId)
+      let apartmentData = []
+      let apartmentError = null
+      
+      if (selectedBuildingId === 'none') {
+        // User has no building access - show empty data
+        apartmentData = []
+      } else {
+        let apartmentQuery = supabase
+          .from('apartments')
+          .select('id, is_occupied, unit_number')
+        if (selectedBuildingId !== 'all') {
+          apartmentQuery = apartmentQuery.eq('building_id', selectedBuildingId)
+        }
+        const result = await apartmentQuery
+        apartmentData = result.data || []
+        apartmentError = result.error
       }
-      const { data: apartmentData, error: apartmentError } = await apartmentQuery
       
       if (apartmentError) throw apartmentError
+      console.log('🔍 Dashboard: Final apartment data length:', apartmentData.length)
 
       // Fetch maintenance requests count
-      // Prefer filtering maintenance by apartment_id to avoid unit_number collisions across buildings
-      let maintenanceBase = supabase
-        .from('maintenance_requests')
-        .select('id, apartment, apartment_id, status')
-        .in('status', ['pending', 'in_progress'])
-      let maintenanceData
-      let maintenanceError
-      if (selectedBuildingId !== 'all') {
-        const apartmentIds = (apartmentData || []).map((a: any) => a.id).filter(Boolean)
-        if (apartmentIds.length > 0) {
-          const res = await maintenanceBase.in('apartment_id', apartmentIds)
-          maintenanceData = res.data
-          maintenanceError = res.error
-        } else {
-          maintenanceData = []
-          maintenanceError = null
-        }
+      let maintenanceData = []
+      let maintenanceError = null
+      
+      if (selectedBuildingId === 'none') {
+        // User has no building access - show empty data
+        maintenanceData = []
       } else {
-        const res = await maintenanceBase
-        maintenanceData = res.data
-        maintenanceError = res.error
+        // Prefer filtering maintenance by apartment_id to avoid unit_number collisions across buildings
+        let maintenanceBase = supabase
+          .from('maintenance_requests')
+          .select('id, apartment, apartment_id, status')
+          .in('status', ['pending', 'in_progress'])
+        
+        if (selectedBuildingId !== 'all') {
+          const apartmentIds = (apartmentData || []).map((a: any) => a.id).filter(Boolean)
+          if (apartmentIds.length > 0) {
+            const res = await maintenanceBase.in('apartment_id', apartmentIds)
+            maintenanceData = res.data || []
+            maintenanceError = res.error
+          } else {
+            maintenanceData = []
+            maintenanceError = null
+          }
+        } else {
+          const res = await maintenanceBase
+          maintenanceData = res.data || []
+          maintenanceError = res.error
+        }
       }
 
       if (maintenanceError) throw maintenanceError
 
       // Fetch active tenants count
-      let tenantQuery = supabase
-        .from('tenants')
-        .select('id, apartments!inner ( building_id )')
-        .eq('is_active', true)
-      if (selectedBuildingId !== 'all') {
-        tenantQuery = tenantQuery.eq('apartments.building_id', selectedBuildingId)
+      let tenantData = []
+      let tenantError = null
+      
+      if (selectedBuildingId === 'none') {
+        // User has no building access - show empty data
+        tenantData = []
+      } else {
+        let tenantQuery = supabase
+          .from('tenants')
+          .select('id, apartments!inner ( building_id )')
+          .eq('is_active', true)
+        if (selectedBuildingId !== 'all') {
+          tenantQuery = tenantQuery.eq('apartments.building_id', selectedBuildingId)
+        }
+        const result = await tenantQuery
+        tenantData = result.data || []
+        tenantError = result.error
       }
-      const { data: tenantData, error: tenantError } = await tenantQuery
 
       if (tenantError) throw tenantError
 
       // Fetch payments for this month
       const currentMonth = new Date().toISOString().substring(0, 7) // YYYY-MM format
-      let paymentQuery = supabase
-        .from('payments')
-        .select('amount, status, apartments!inner ( building_id )')
-        .eq('status', 'completed')
-        .gte('paid_date', `${currentMonth}-01`)
-        .lt('paid_date', `${getNextMonth(currentMonth)}-01`)
-      if (selectedBuildingId !== 'all') {
-        paymentQuery = paymentQuery.eq('apartments.building_id', selectedBuildingId)
+      let paymentData = []
+      let paymentError = null
+      
+      if (selectedBuildingId === 'none') {
+        // User has no building access - show empty data
+        paymentData = []
+      } else {
+        let paymentQuery = supabase
+          .from('payments')
+          .select('amount, status, apartments!inner ( building_id )')
+          .eq('status', 'completed')
+          .gte('paid_date', `${currentMonth}-01`)
+          .lt('paid_date', `${getNextMonth(currentMonth)}-01`)
+        if (selectedBuildingId !== 'all') {
+          paymentQuery = paymentQuery.eq('apartments.building_id', selectedBuildingId)
+        }
+        const result = await paymentQuery
+        paymentData = result.data || []
+        paymentError = result.error
       }
-      const { data: paymentData, error: paymentError } = await paymentQuery
 
       if (paymentError) throw paymentError
 
       // Fetch total completed payments
-      let totalPaymentQuery = supabase
-        .from('payments')
-        .select('amount, apartments!inner ( building_id )')
-        .eq('status', 'completed')
-      if (selectedBuildingId !== 'all') {
-        totalPaymentQuery = totalPaymentQuery.eq('apartments.building_id', selectedBuildingId)
+      let totalPaymentData = []
+      let totalPaymentError = null
+      
+      if (selectedBuildingId === 'none') {
+        // User has no building access - show empty data
+        totalPaymentData = []
+      } else {
+        let totalPaymentQuery = supabase
+          .from('payments')
+          .select('amount, apartments!inner ( building_id )')
+          .eq('status', 'completed')
+        if (selectedBuildingId !== 'all') {
+          totalPaymentQuery = totalPaymentQuery.eq('apartments.building_id', selectedBuildingId)
+        }
+        const result = await totalPaymentQuery
+        totalPaymentData = result.data || []
+        totalPaymentError = result.error
       }
-      const { data: totalPaymentData, error: totalPaymentError } = await totalPaymentQuery
 
       if (totalPaymentError) throw totalPaymentError
 
@@ -190,7 +238,11 @@ const Dashboard: React.FC = () => {
         .limit(10)
 
       let apartmentIdsForFilter: string[] = []
-      if (selectedBuildingId !== 'all') {
+      if (selectedBuildingId === 'none') {
+        // User has no building access - show empty data
+        setRecentMaintenanceRequests([])
+        return
+      } else if (selectedBuildingId !== 'all') {
         const { data: aptIdsRows } = await supabase
           .from('apartments')
           .select('id')
@@ -369,23 +421,29 @@ const Dashboard: React.FC = () => {
       icon: HomeIcon,
       color: 'blue' as const,
     },
-         {
-       title: t('pendingRequests'), // More specific title since we're only showing pending/in-progress
-       value: stats.totalRequests,
-       icon: WrenchScrewdriverIcon,
-       color: 'yellow' as const,
-     },
     {
-      title: t('totalTenants'),
+      title: t('occupied'),
+      value: stats.occupiedApartments,
+      icon: CheckCircleIcon,
+      color: 'green' as const,
+    },
+    {
+      title: t('available'),
+      value: stats.totalApartments - stats.occupiedApartments,
+      icon: ClockIcon,
+      color: 'yellow' as const,
+    },
+    {
+      title: t('totalResidents'),
       value: stats.totalTenants,
       icon: UsersIcon,
-      color: 'green' as const,
+      color: 'rose' as const,
     },
     {
       title: t('totalIncome'),
       value: `$${stats.monthlyIncome.toLocaleString()}`,
       icon: CreditCardIcon,
-      color: 'green' as const,
+      color: 'red' as const,
       subtitle: t('thisMonth')
     },
   ]
@@ -401,8 +459,8 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          {[...Array(5)].map((_, i) => (
             <div key={i} className="card-modern p-6">
               <div className="animate-pulse">
                 <div className="w-14 h-14 bg-gray-200 rounded-2xl mb-4"></div>
@@ -453,14 +511,14 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {statsCards.map((stat, index) => (
           <StatsCard
             key={index}
             title={stat.title}
             value={stat.value}
             icon={stat.icon}
-            color={stat.color === 'green' ? 'rose' as any : stat.color}
+            color={stat.color}
             subtitle={stat.subtitle}
           />
         ))}
@@ -484,41 +542,43 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
           <div className="p-6">
-            {recentMaintenanceRequests.length > 0 ? (
-              <div className="space-y-3">
-                {recentMaintenanceRequests.map((request) => (
-                  <div key={request.id} className="card-flat p-4 hover-lift cursor-pointer">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900">{request.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {t('apartment')}: {request.apartment} • {request.tenant_name}
-                        </p>
-                        <div className="flex items-center space-x-2 mt-2">
-                          <span className={`badge-modern ${getPriorityColor(request.priority)}`}>
-                            {t(request.priority)}
-                          </span>
-                          <span className={`badge-modern ${getStatusColor(request.status)}`}>
-                            {t(request.status)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right ml-4">
-                        <p className="font-bold text-gray-900 text-lg">
-                          ${request.estimated_cost.toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-500">{t('estimatedCost')}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Pending Requests */}
+              <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl">
+                <WrenchScrewdriverIcon className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-gray-900">
+                  {recentMaintenanceRequests.filter(r => r.status === 'pending').length}
+                </p>
+                <p className="text-xs text-gray-600 font-medium mt-1">{t('pending')}</p>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <WrenchScrewdriverIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">{t('noMaintenanceRequests')}</p>
+
+              {/* In Progress */}
+              <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl">
+                <ClockIcon className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-gray-900">
+                  {recentMaintenanceRequests.filter(r => r.status === 'in_progress').length}
+                </p>
+                <p className="text-xs text-gray-600 font-medium mt-1">{t('inProgress')}</p>
               </div>
-            )}
+
+              {/* High Priority */}
+              <div className="text-center p-4 bg-gradient-to-br from-red-50 to-pink-50 rounded-xl">
+                <ExclamationTriangleIcon className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-gray-900">
+                  {recentMaintenanceRequests.filter(r => r.priority === 'high' || r.priority === 'urgent').length}
+                </p>
+                <p className="text-xs text-gray-600 font-medium mt-1">{t('highPriority')}</p>
+              </div>
+
+              {/* Total Cost */}
+              <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl">
+                <CheckCircleIcon className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-gray-900">
+                  ${recentMaintenanceRequests.reduce((sum, r) => sum + (r.estimated_cost || 0), 0).toLocaleString()}
+                </p>
+                <p className="text-xs text-gray-600 font-medium mt-1">{t('estimatedCost')}</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -564,40 +624,6 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Building Overview */}
-      <div className="card-modern hover-lift">
-        <div className="p-6 border-b border-gray-100">
-          <h3 className="text-xl font-bold text-gray-900">
-            {t('buildingOverview')}
-          </h3>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center group cursor-pointer">
-              <div className="icon-container-gradient bg-gradient-to-br from-blue-500 to-cyan-500 mx-auto mb-4">
-                <HomeIcon className="w-6 h-6 text-white" />
-              </div>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalApartments}</p>
-              <p className="text-sm text-gray-600 mt-2">{t('totalApartments')}</p>
-            </div>
-            <div className="text-center group cursor-pointer">
-              <div className="icon-container-gradient bg-gradient-to-br from-green-500 to-emerald-500 mx-auto mb-4">
-                <CheckCircleIcon className="w-6 h-6 text-white" />
-              </div>
-              <p className="text-3xl font-bold text-gray-900">{stats.occupiedApartments}</p>
-              <p className="text-sm text-gray-600 mt-2">{t('occupied')}</p>
-            </div>
-            <div className="text-center group cursor-pointer">
-              <div className="icon-container-gradient bg-gradient-to-br from-yellow-500 to-orange-500 mx-auto mb-4">
-                <ClockIcon className="w-6 h-6 text-white" />
-              </div>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalApartments - stats.occupiedApartments}</p>
-              <p className="text-sm text-gray-600 mt-2">{t('available')}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
       {/* New Maintenance Request Modal */}
       <NewMaintenanceRequestModal
         isOpen={isNewRequestModalOpen}

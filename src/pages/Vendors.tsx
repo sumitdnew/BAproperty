@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
+import { useBuildingContext } from '../context/BuildingContext';
 import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import AddVendorModal from '../components/Vendors/AddVendorModal';
 import EditVendorModal from '../components/Vendors/EditVendorModal';
@@ -37,21 +38,50 @@ const Vendors: React.FC = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
 
+  const { selectedBuildingId, buildings: contextBuildings } = useBuildingContext()
+
   // Fetch vendors
   const fetchVendors = async () => {
     try {
       setLoading(true);
+      
+      if (selectedBuildingId === 'none') {
+        // User has no building access - show empty data
+        setVendors([])
+        setStats({
+          totalVendors: 0,
+          activeVendors: 0,
+          inactiveVendors: 0
+        })
+        return
+      }
+
+      // Get building IDs that the user has access to
+      const userBuildingIds = contextBuildings?.map(b => b.id) || []
+      
+      if (userBuildingIds.length === 0) {
+        // User has no building access - show empty data
+        setVendors([])
+        setStats({
+          totalVendors: 0,
+          activeVendors: 0,
+          inactiveVendors: 0
+        })
+        return
+      }
+
       const { data, error } = await supabase
         .from('vendors')
         .select(`
           *,
-          vendor_buildings (
-            buildings (
+          vendor_buildings!inner (
+            buildings!inner (
               id,
               name
             )
           )
         `)
+        .in('vendor_buildings.building_id', userBuildingIds)
         .order('name');
 
       if (error) throw error;
@@ -72,7 +102,7 @@ const Vendors: React.FC = () => {
 
   useEffect(() => {
     fetchVendors();
-  }, []);
+  }, [contextBuildings]);
 
   // Filter vendors
   const filteredVendors = vendors.filter(vendor => {

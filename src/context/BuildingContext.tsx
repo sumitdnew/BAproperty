@@ -79,9 +79,10 @@ export const BuildingProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       setBuildings(mapped)
 
-      // If previously selected building is no longer in list, reset to 'all' or first
+      // If previously selected building is no longer in list, reset appropriately
       if (mapped.length === 0) {
-        setSelectedBuildingId('all')
+        // User has no building access - don't set to 'all' as that shows all buildings
+        setSelectedBuildingId('none')
       } else if (mapped.length === 1) {
         // If user only has access to one building (like a tenant), auto-select it
         setSelectedBuildingId(mapped[0].id)

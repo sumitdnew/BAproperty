@@ -79,3 +79,5 @@ ORDER BY created_at DESC;
 -- If RLS is enabled on admin_building_access but no policies exist, that's the issue
 -- The fix is to run the fix-admin-building-access-rls.sql script
 
+
+

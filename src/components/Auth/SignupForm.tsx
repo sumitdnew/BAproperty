@@ -54,23 +54,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
 
       if (authData.user) {
         console.log('✅ User created in auth.users:', authData.user.id);
-
-        // Create user profile
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert({
-            id: authData.user.id,
-            user_type: userType, // Use selected user type for admin/manager signups
-            first_name: firstName,
-            last_name: lastName
-          });
-
-        if (profileError) {
-          console.error('❌ Failed to create user profile:', profileError);
-          // Don't throw here, continue with the process
-        } else {
-          console.log('✅ User profile created successfully');
-        }
+        console.log('✅ User profile will be created automatically by database trigger');
 
         setSuccess(true);
         setTimeout(() => {

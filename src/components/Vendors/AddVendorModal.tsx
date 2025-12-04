@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
+import { useBuildingContext } from '../../context/BuildingContext';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 
 interface Building {
@@ -43,26 +44,23 @@ const AddVendorModal: React.FC<AddVendorModalProps> = ({ isOpen, onClose, onSucc
     'Other'
   ];
 
+  const { buildings: contextBuildings } = useBuildingContext()
+
+  const fetchBuildings = async () => {
+    try {
+      // Use buildings from context (respects user access permissions)
+      setBuildings(contextBuildings || []);
+    } catch (error) {
+      console.error('Error fetching buildings:', error);
+    }
+  };
+
   // Fetch buildings when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchBuildings();
     }
-  }, [isOpen]);
-
-  const fetchBuildings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('buildings')
-        .select('id, name')
-        .order('name');
-
-      if (error) throw error;
-      setBuildings(data || []);
-    } catch (error) {
-      console.error('Error fetching buildings:', error);
-    }
-  };
+  }, [isOpen, contextBuildings]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

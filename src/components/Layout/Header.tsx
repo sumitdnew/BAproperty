@@ -88,10 +88,15 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                 className="select-modern text-sm py-2"
                 disabled={loading}
               >
-                <option value="all">{t('all')}</option>
+                {buildings.length > 0 && <option value="all">{t('all')}</option>}
                 {buildings.map((b) => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
+                {buildings.length === 0 && (
+                  <option value="none" disabled>
+                    {t('noBuildingsAssigned')}
+                  </option>
+                )}
               </select>
             </div>
           )}
@@ -203,10 +208,15 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                     className="select-modern text-sm py-2"
                     disabled={loading}
                   >
-                    <option value="all">{t('all')}</option>
+                    {buildings.length > 0 && <option value="all">{t('all')}</option>}
                     {buildings.map((b) => (
                       <option key={b.id} value={b.id}>{b.name}</option>
                     ))}
+                    {buildings.length === 0 && (
+                      <option value="none" disabled>
+                        {t('noBuildingsAssigned')}
+                      </option>
+                    )}
                   </select>
                 </div>
               )}

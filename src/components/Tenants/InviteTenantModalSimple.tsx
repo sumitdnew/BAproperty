@@ -51,7 +51,7 @@ const InviteTenantModalSimple: React.FC<InviteTenantModalProps> = ({ isOpen, onC
     if (isOpen) {
       fetchBuildings()
     }
-  }, [isOpen])
+  }, [isOpen, contextBuildings])
 
   // Load apartments when building is selected
   useEffect(() => {
@@ -62,15 +62,12 @@ const InviteTenantModalSimple: React.FC<InviteTenantModalProps> = ({ isOpen, onC
     }
   }, [formData.building_id])
 
+  const { buildings: contextBuildings } = useBuildingContext()
+
   const fetchBuildings = async () => {
     try {
-      const { data, error } = await supabase
-        .from('buildings')
-        .select('id, name')
-        .order('name')
-
-      if (error) throw error
-      setBuildings(data || [])
+      // Use buildings from context (respects user access permissions)
+      setBuildings(contextBuildings || [])
     } catch (err) {
       console.error('Error fetching buildings:', err)
       setError('Failed to load buildings')
@@ -149,6 +146,23 @@ const InviteTenantModalSimple: React.FC<InviteTenantModalProps> = ({ isOpen, onC
       try {
         console.log('📧 Sending invitation email via EmailJS...')
         
+        // Fetch language setting from app_settings
+        const { data: languageSetting } = await supabase
+          .from('app_settings')
+          .select('setting_value')
+          .eq('setting_key', 'default_language')
+          .single()
+        
+        const defaultLanguage = languageSetting?.setting_value || 'es'
+        
+        // Fetch the appropriate template ID based on language
+        const templateKey = defaultLanguage === 'es' ? 'spanish_email_template_id' : 'english_email_template_id'
+        const { data: templateSetting } = await supabase
+          .from('app_settings')
+          .select('setting_value')
+          .eq('setting_key', templateKey)
+          .single()
+        
         // Force the correct Public Key (same as EmailTest)
         const envKey = import.meta.env.VITE_EMAILJS_USER_ID
         const emailjsPublicKey = envKey === 'E0G-u44Ys9PBcy6gP' ? '2eD5KJ_H_t0llmv08' : envKey
@@ -163,10 +177,13 @@ const InviteTenantModalSimple: React.FC<InviteTenantModalProps> = ({ isOpen, onC
           signupUrlInput.value = `${window.location.origin}/invite?invitation=${invitationData.id}&email=${encodeURIComponent(formData.email)}`
         }
 
+        const templateId = templateSetting?.setting_value || 'template_ln74jmx'
+        console.log(`📧 Sending invitation in ${defaultLanguage} using template ${templateId}`)
+        
         // Send email using EmailJS (same pattern as EmailTest)
         await emailjs.sendForm(
           'service_7n6g698', // Your EmailJS Service ID
-          'template_ln74jmx', // Your EmailJS Template ID
+          templateId, // Template ID based on language setting
           form.current!, // Form reference
           {
             publicKey: emailjsPublicKey,

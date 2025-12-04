@@ -51,7 +51,7 @@ const Buildings: React.FC = () => {
   const [showViewBuildingModal, setShowViewBuildingModal] = useState(false)
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>('')
 
-  const { selectedBuildingId: contextBuildingId, setSelectedBuildingId: setContextBuildingId } = useBuildingContext()
+  const { buildings: contextBuildings, selectedBuildingId: contextBuildingId, setSelectedBuildingId: setContextBuildingId } = useBuildingContext()
 
   // Fetch buildings data
   const fetchBuildings = async () => {
@@ -59,7 +59,21 @@ const Buildings: React.FC = () => {
       setLoading(true)
       setError(null)
 
-      // Fetch buildings with apartment counts
+      // Use buildings from context (respects user access permissions)
+      if (contextBuildings.length === 0) {
+        // User has no building access - show empty state
+        setBuildings([])
+        setStats({
+          totalBuildings: 0,
+          totalApartments: 0,
+          occupiedApartments: 0,
+          availableApartments: 0
+        })
+        return
+      }
+
+      // Fetch detailed building data for buildings the user has access to
+      const buildingIds = contextBuildings.map(b => b.id)
       const { data: buildingsData, error: buildingsError } = await supabase
         .from('buildings')
         .select(`
@@ -69,6 +83,7 @@ const Buildings: React.FC = () => {
             is_occupied
           )
         `)
+        .in('id', buildingIds)
         .order('created_at', { ascending: false })
 
       if (buildingsError) throw buildingsError
@@ -109,10 +124,10 @@ const Buildings: React.FC = () => {
     }
   }
 
-  // Load data on component mount
+  // Load data when contextBuildings change
   useEffect(() => {
     fetchBuildings()
-  }, [])
+  }, [contextBuildings])
 
   const filteredBuildings = buildings.filter(building => {
     const matchesSearch = building.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

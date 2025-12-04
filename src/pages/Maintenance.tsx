@@ -354,6 +354,21 @@ const Maintenance: React.FC = () => {
       setLoading(true)
       setError(null)
 
+      if (selectedBuildingId === 'none') {
+        // User has no building access - show empty data
+        setMaintenanceRequests([])
+        setStats({
+          totalRequests: 0,
+          pendingRequests: 0,
+          inProgressRequests: 0,
+          completedRequests: 0,
+          averageTimeDays: 0,
+          completionRate: 0,
+          totalEstimatedCost: 0
+        })
+        return
+      }
+
       // Get current user to check if they're a tenant
       const { data: { user } } = await supabase.auth.getUser()
       

@@ -69,6 +69,18 @@ const Apartments: React.FC = () => {
       setLoading(true)
       setError(null)
 
+      if (selectedBuildingId === 'none') {
+        // User has no building access - show empty data
+        setApartments([])
+        setStats({
+          totalApartments: 0,
+          occupiedApartments: 0,
+          availableApartments: 0,
+          averageRent: 0
+        })
+        return
+      }
+
       let apartmentsQuery = supabase
         .from('apartments')
         .select(`

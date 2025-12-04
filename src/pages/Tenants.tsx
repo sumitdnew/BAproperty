@@ -65,6 +65,18 @@ const Tenants: React.FC = () => {
       setLoading(true)
       setError(null)
 
+      if (selectedBuildingId === 'none') {
+        // User has no building access - show empty data
+        setTenants([])
+        setStats({
+          totalTenants: 0,
+          activeTenants: 0,
+          leasesExpiringSoon: 0,
+          averageRent: 0
+        })
+        return
+      }
+
       console.log('Fetching tenants directly...')
 
       // Query tenants first, then get related data separately

@@ -48,3 +48,5 @@ LEFT JOIN admin_building_access aba ON aba.admin_id = up.id
 WHERE up.email = 'YOUR_EMAIL_HERE' -- Replace with your email
 GROUP BY up.id, up.first_name, up.last_name;
 
+
+

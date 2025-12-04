@@ -69,7 +69,7 @@ export const useAnalytics = (dateRange: { start: string; end: string } = {
     error: null
   })
 
-  const { selectedBuildingId } = useBuildingContext()
+  const { selectedBuildingId, buildings: contextBuildings } = useBuildingContext()
 
   const fetchAnalyticsData = async () => {
     try {
@@ -77,13 +77,14 @@ export const useAnalytics = (dateRange: { start: string; end: string } = {
 
       // Fetch building IDs for filtering
       let buildingIds: string[] = []
-      if (selectedBuildingId && selectedBuildingId !== 'all') {
+      if (selectedBuildingId && selectedBuildingId !== 'all' && selectedBuildingId !== 'none') {
         buildingIds = [selectedBuildingId]
+      } else if (selectedBuildingId === 'none') {
+        // User has no building access - show empty data
+        buildingIds = []
       } else {
-        const { data: buildings } = await supabase
-          .from('buildings')
-          .select('id')
-        buildingIds = buildings?.map(b => b.id) || []
+        // selectedBuildingId === 'all' - use buildings from context
+        buildingIds = contextBuildings?.map(b => b.id) || []
       }
 
       // Fetch Revenue Data
@@ -175,6 +176,10 @@ export const useAnalytics = (dateRange: { start: string; end: string } = {
   }
 
   const fetchOccupancyData = async (buildingIds: string[]): Promise<OccupancyData[]> => {
+    if (buildingIds.length === 0) {
+      return []
+    }
+    
     const { data: buildings } = await supabase
       .from('buildings')
       .select(`
